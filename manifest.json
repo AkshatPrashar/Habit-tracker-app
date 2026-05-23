@@ -1,0 +1,16 @@
+{
+  "name": "Streakies",
+  "short_name": "Streakies",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#D6FF4D",
+  "icons": [
+    {
+      "src": "S_fancy.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
