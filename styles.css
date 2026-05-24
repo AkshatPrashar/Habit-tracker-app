@@ -375,9 +375,9 @@ h3 {
 
 /* Checkbox styling */
 .task-checkbox-wrap {
-    display: flex;
-    flex-direction: row;
-    align-items: flex-start;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: flex-start !important;
     cursor: pointer;
     gap: 10px;
     width: 100%;
@@ -717,7 +717,7 @@ h3 {
     border-color: var(--accent);
 }
 
-.day-actions-card label {
+.day-actions-card label:not(.task-checkbox-wrap) {
     color: var(--text-muted);
     font-size: 12px;
     text-transform: uppercase;
