@@ -376,8 +376,13 @@ h3 {
 /* Checkbox styling */
 .task-checkbox-wrap {
     display: flex;
-    align-items: center;
+    flex-direction: row;
+    align-items: flex-start;
     cursor: pointer;
+    gap: 10px;
+    width: 100%;
+    min-height: unset !important;
+    min-width: unset !important;
 }
 
 .task-checkbox-wrap input {
@@ -391,6 +396,7 @@ h3 {
 .checkmark {
     height: 22px;
     width: 22px;
+    min-width: 22px;
     background-color: transparent;
     border: 2px solid var(--text-muted);
     border-radius: 6px;
@@ -398,7 +404,8 @@ h3 {
     align-items: center;
     justify-content: center;
     transition: all 0.2s;
-    margin-right: 12px;
+    flex-shrink: 0;
+    margin-top: 1px;
 }
 
 .task-checkbox-wrap input:checked~.checkmark {
@@ -954,7 +961,7 @@ h3 {
     flex: 1;
     display: flex;
     flex-direction: row;
-    justify-content: flex-start;
+    justify-content: flex-end;
     overflow-x: auto;
     scrollbar-width: none;
     padding-bottom: 5px;
@@ -1205,6 +1212,10 @@ h3 {
 
 .ai-bubble-btn:hover {
     transform: scale(1.1);
+}
+
+body.chat-open .ai-bubble-btn {
+    display: none !important;
 }
 
 .ai-bubble-btn span {
@@ -1614,27 +1625,35 @@ h3 {
     .streak-stats {
         flex-direction: row;
         justify-content: space-between;
-        gap: 10px;
+        gap: 6px;
+        overflow: hidden;
     }
 
     .stat-row {
-        flex-direction: row;
+        flex-direction: column;
         align-items: center;
-        padding: 10px;
+        padding: 8px 4px;
         background: rgba(255, 255, 255, 0.05);
         border-radius: 12px;
         flex: 1;
+        min-width: 0;
         justify-content: center;
-        gap: 8px;
+        gap: 4px;
         margin: 0;
     }
     
     .stat-label {
-        font-size: 14px;
+        font-size: 11px;
+        text-align: center;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        width: 100%;
     }
 
     .stat-value {
-        font-size: 16px;
+        font-size: 15px;
+        white-space: nowrap;
     }
 
     .heatmap-wrapper {
@@ -1673,9 +1692,14 @@ h3 {
     }
 
     /* 5. GENERAL RULES */
-    button, .nav-btn, .task-checkbox-wrap, .delete-streak-btn {
+    button, .nav-btn, .delete-streak-btn {
         min-width: 44px;
         min-height: 44px;
+    }
+
+    .task-checkbox-wrap {
+        min-width: unset !important;
+        min-height: unset !important;
     }
 
     .quick-add-btn {

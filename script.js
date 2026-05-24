@@ -1205,6 +1205,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 heatmapWrapper.appendChild(monthContainer);
             }
 
+            // Scroll to current month - use both rAF and setTimeout for reliability
+            const scrollToEnd = () => { heatmapWrapper.scrollLeft = heatmapWrapper.scrollWidth; };
+            requestAnimationFrame(() => requestAnimationFrame(scrollToEnd));
+            setTimeout(scrollToEnd, 100);
+
             const canvasObj = card.querySelector('#chart-' + streak.id);
             if (streakCharts[streak.id]) {
                 streakCharts[streak.id].destroy();
