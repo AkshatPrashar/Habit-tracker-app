@@ -1626,7 +1626,7 @@ body.chat-open .ai-bubble-btn {
         flex-direction: row;
         justify-content: space-between;
         gap: 6px;
-        overflow: hidden;
+        width: 100%;
     }
 
     .stat-row {
@@ -1641,12 +1641,13 @@ body.chat-open .ai-bubble-btn {
         gap: 4px;
         margin: 0;
     }
-    
+
     .stat-label {
         font-size: 11px;
         text-align: center;
         white-space: nowrap;
         overflow: hidden;
+        text-overflow: ellipsis;
         text-overflow: ellipsis;
         width: 100%;
     }
