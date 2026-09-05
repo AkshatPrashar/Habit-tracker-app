@@ -1,22 +1,35 @@
 const express = require('express');
 const path = require('path');
+const fs = require('fs');
 const app = express();
 
-// Serve static files from public directory
-app.use(express.static(path.join(__dirname, 'public')));
+const publicDir = path.join(__dirname, 'public');
 
-// Serve index.html for root and any non-existent routes
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
+// Debug: Check if public directory exists
+if (!fs.existsSync(publicDir)) {
+  console.error(`ERROR: Public directory not found at ${publicDir}`);
+  process.exit(1);
+}
+
+// Serve static files from public directory
+app.use(express.static(publicDir, {
+  index: 'index.html'
+}));
 
 // SPA fallback - serve index.html for all routes
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  const indexPath = path.join(publicDir, 'index.html');
+
+  if (!fs.existsSync(indexPath)) {
+    return res.status(404).send(`index.html not found at ${indexPath}`);
+  }
+
+  res.sendFile(indexPath);
 });
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`✓ Server running on http://localhost:${PORT}`);
+  console.log(`✓ Public directory: ${publicDir}`);
   console.log(`✓ Open your browser and navigate to http://localhost:${PORT}`);
 });
