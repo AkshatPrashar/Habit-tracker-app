@@ -28,7 +28,7 @@ exports.handler = async (event) => {
       return {
         statusCode: 200,
         headers: CORS_HEADERS,
-        body: JSON.stringify({ reply: "API key not configured. Please check Netlify environment variables." })
+        body: JSON.stringify({ reply: "API key not configured. Please check Vercel environment variables." })
       };
     }
 
@@ -58,7 +58,7 @@ If no streak data exists, encourage them to create their first habit.`;
     console.log('Calling Gemini API...');
 
     const geminiRes = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
