@@ -1655,6 +1655,9 @@ body.chat-open .ai-bubble-btn {
     .stat-value {
         font-size: 15px;
         white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        width: 100%;
     }
 
     .heatmap-wrapper {
