@@ -1,10 +1,5 @@
 {
   "outputDirectory": "public",
-  "functions": {
-    "src/controllers/*.js": {
-      "runtime": "nodejs18.x"
-    }
-  },
   "rewrites": [
     {
       "source": "/(.*)",
