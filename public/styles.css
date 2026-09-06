@@ -1625,14 +1625,15 @@ body.chat-open .ai-bubble-btn {
     .streak-stats {
         flex-direction: row;
         justify-content: space-between;
-        gap: 6px;
+        gap: 3px;
         width: 100%;
+        overflow: hidden;
     }
 
     .stat-row {
         flex-direction: column;
         align-items: center;
-        padding: 8px 4px;
+        padding: 6px 2px;
         background: rgba(255, 255, 255, 0.05);
         border-radius: 12px;
         flex: 1;
