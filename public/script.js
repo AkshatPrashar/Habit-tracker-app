@@ -85,34 +85,13 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error("Corrupted localStorage data, starting fresh", e);
         }
 
-        // Evaluate streaks
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
+        // Initialize streak data structures
         if (appData.streaks) {
             appData.streaks.forEach(streak => {
-                streak.currentStreak = streak.currentStreak || 0;
-                streak.longestStreak = streak.longestStreak || 0;
-                streak.pending = true;
-
-                if (streak.lastCheckedDate) {
-                    const lastChecked = new Date(streak.lastCheckedDate);
-                    lastChecked.setHours(0, 0, 0, 0);
-                    const diffTime = today.getTime() - lastChecked.getTime();
-                    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
-                    if (diffDays >= 2) {
-                        streak.currentStreak = 0;
-                        streak.pending = true;
-                    } else if (diffDays === 1) {
-                        streak.pending = true;
-                    } else if (diffDays === 0) {
-                        streak.pending = false;
-                    }
-                }
+                if (!streak.history) streak.history = {};
+                if (!streak.questionData) streak.questionData = {};
             });
         }
-        saveData();
     };
 
     const saveData = () => {
@@ -125,7 +104,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     loadData();
 
-    const saveAppData = () => saveData();
 
     const months = [
         "January", "February", "March", "April", "May", "June",
@@ -272,11 +250,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (isDone) {
                 const [sH, sM] = block.startTime.split(':').map(Number);
                 const [eH, eM] = block.endTime.split(':').map(Number);
-                block.actualDuration = (eH * 60 + eM) - (sH * 60 + sM);
+                block.plannedDuration = (eH * 60 + eM) - (sH * 60 + sM);
             } else {
-                block.actualDuration = 0;
+                block.plannedDuration = 0;
             }
-            saveAppData();
+            saveData();
             renderTimeline(data);
         }
     };
@@ -299,10 +277,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const timeStr = `${formatTime12Hr(block.startTime)} - ${formatTime12Hr(block.endTime)}`;
 
-            blockDiv.innerHTML = `
-                <div class="block-time">${timeStr}</div>
-                <div class="block-title">${block.title}</div>
-            `;
+            const timeDiv = document.createElement('div');
+            timeDiv.className = 'block-time';
+            timeDiv.textContent = timeStr;
+            blockDiv.appendChild(timeDiv);
+
+            const titleDiv = document.createElement('div');
+            titleDiv.className = 'block-title';
+            titleDiv.textContent = block.title;
+            blockDiv.appendChild(titleDiv);
 
             const checkboxWrap = document.createElement('label');
             checkboxWrap.classList.add('task-checkbox-wrap', 'block-checkbox-wrap');
@@ -392,7 +375,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const toggleTask = (index, isDone) => {
         if (!currentSelectedDateStr) return;
         getDateData(currentSelectedDateStr).tasks[index].done = isDone;
-        saveAppData();
+        saveData();
     };
 
     // 4. Events
@@ -428,7 +411,7 @@ document.addEventListener('DOMContentLoaded', () => {
             checkbox.checked = task.done;
             checkbox.addEventListener('change', (e) => {
                 getDateData(dayActionsSelectedDateStr).tasks[index].done = e.target.checked;
-                saveAppData();
+                saveData();
                 refreshDetailsPanel();
             });
             const checkmark = document.createElement('div');
@@ -462,10 +445,17 @@ document.addEventListener('DOMContentLoaded', () => {
             blockDiv.classList.add('time-block');
             if (block.completed) blockDiv.classList.add('completed');
             const timeStr = `${formatTime12Hr(block.startTime)} - ${formatTime12Hr(block.endTime)}`;
-            blockDiv.innerHTML = `
-                <div class="block-time">${timeStr}</div>
-                <div class="block-title">${block.title}</div>
-            `;
+
+            const timeDiv = document.createElement('div');
+            timeDiv.className = 'block-time';
+            timeDiv.textContent = timeStr;
+            blockDiv.appendChild(timeDiv);
+
+            const titleDiv = document.createElement('div');
+            titleDiv.className = 'block-title';
+            titleDiv.textContent = block.title;
+            blockDiv.appendChild(titleDiv);
+
             const checkboxWrap = document.createElement('label');
             checkboxWrap.classList.add('task-checkbox-wrap', 'block-checkbox-wrap');
             const checkbox = document.createElement('input');
@@ -473,8 +463,17 @@ document.addEventListener('DOMContentLoaded', () => {
             checkbox.checked = block.completed;
             checkbox.addEventListener('change', (e) => {
                 const b = getDateData(dayActionsSelectedDateStr).timeBlocks.find(x => x.id === block.id);
-                if (b) b.completed = e.target.checked;
-                saveAppData();
+                if (b) {
+                    b.completed = e.target.checked;
+                    if (e.target.checked) {
+                        const [sH, sM] = b.startTime.split(':').map(Number);
+                        const [eH, eM] = b.endTime.split(':').map(Number);
+                        b.plannedDuration = (eH * 60 + eM) - (sH * 60 + sM);
+                    } else {
+                        b.plannedDuration = 0;
+                    }
+                }
+                saveData();
                 renderDayActionsTimeline(data);
                 refreshDetailsPanel();
             });
@@ -494,7 +493,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (text && text.trim()) {
                 const data = getDateData(dayActionsSelectedDateStr);
                 data.tasks.push({ text: text.trim(), done: false });
-                saveAppData();
+                saveData();
                 dayActionsTaskInput.value = '';
                 refreshDayActionsCards();
                 refreshDetailsPanel();
@@ -533,10 +532,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 startTime: start,
                 endTime: end,
                 completed: false,
-                actualDuration: 0
+                plannedDuration: 0
             });
             data.timeBlocks.sort((a, b) => a.startTime.localeCompare(b.startTime));
-            saveAppData();
+            saveData();
             
             dayActionsBlockTitleInput.value = '';
             dayActionsBlockStartInput.value = '';
@@ -598,12 +597,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 startTime: start,
                 endTime: end,
                 completed: false,
-                actualDuration: 0
+                plannedDuration: 0
             });
 
             data.timeBlocks.sort((a, b) => a.startTime.localeCompare(b.startTime));
 
-            saveAppData();
+            saveData();
             planDayModal.style.display = 'none';
 
             detailsPanel.classList.add('open');
@@ -617,7 +616,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (dayActionsSelectedDateStr) {
                 const data = getDateData(dayActionsSelectedDateStr);
                 data.notes = e.target.value;
-                saveAppData();
+                saveData();
                 refreshDetailsPanel(); // Keep details panel synced if needed
             }
         });
@@ -681,7 +680,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (text && text.trim()) {
             const data = getDateData(currentSelectedDateStr);
             data.tasks.push({ text: text.trim(), done: false });
-            saveAppData();
+            saveData();
             input.value = '';
             refreshDetailsPanel();
         }
@@ -691,7 +690,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (currentSelectedDateStr) {
             const data = getDateData(currentSelectedDateStr);
             data.notes = dailyNotes.value;
-            saveAppData();
+            saveData();
             alert(`Tasks & Notes Saved for ${selectedDateTitle.textContent}!`);
         }
     });
@@ -722,7 +721,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- STREAKS MODULE LOGIC ---
     if (!appData.streaks) {
         appData.streaks = [];
-        saveAppData();
+        saveData();
     }
 
     const navCalendarBtn = document.getElementById('navCalendarBtn');
@@ -820,7 +819,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 name: name,
                 type: streakType,
                 color: selectedStreakColor,
-                startDate: new Date().toISOString().split('T')[0],
+                startDate: formatStreakDate(new Date()),
                 history: {},
                 questionData: {},
                 currentStreak: 0,
@@ -828,7 +827,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 lastCheckedDate: null,
                 pending: true
             });
-            saveAppData();
+            saveData();
             forgeModal.style.display = 'none';
             renderStreaks();
         }
@@ -845,7 +844,7 @@ document.addEventListener('DOMContentLoaded', () => {
         confirmDeleteStreakBtn.addEventListener('click', () => {
             if (streakToDeleteId) {
                 appData.streaks = appData.streaks.filter(s => s.id !== streakToDeleteId);
-                saveAppData();
+                saveData();
                 renderStreaks();
                 deleteStreakModal.style.display = 'none';
                 streakToDeleteId = null;
@@ -888,12 +887,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         currentStreak = tempStreak;
         const completionRate = Math.round((activeDays / totalDays) * 100);
-
-        // Override with new persistence logic if available
-        if (streak.lastCheckedDate !== undefined) {
-            currentStreak = streak.currentStreak || 0;
-            longestStreak = streak.longestStreak || 0;
-        }
 
         return { currentStreak, longestStreak, completionRate };
     };
@@ -1097,7 +1090,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </button>
                 <div class="streak-info">
                     <div class="streak-title">
-                        <h2>${streak.name}</h2>
+                        <h2></h2>
                     </div>
                     ${streak.type === 'study' ? `
                         <div class="daily-questions">
@@ -1124,6 +1117,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             `;
             streaksContainer.appendChild(card);
+
+            const streakTitle = card.querySelector('.streak-title h2');
+            streakTitle.textContent = streak.name;
 
             const heatmapWrapper = card.querySelector('.heatmap-wrapper');
             const today = new Date();
@@ -1260,7 +1256,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (streak.currentStreak > (streak.longestStreak || 0)) {
                         streak.longestStreak = streak.currentStreak;
                     }
-                    streak.lastCheckedDate = new Date().toISOString();
+                    streak.lastCheckedDate = formatStreakDate(new Date());
                     streak.pending = false;
                 }
             };
@@ -1271,21 +1267,22 @@ document.addEventListener('DOMContentLoaded', () => {
                     streak.questionData = streak.questionData || {};
                     streak.questionData[todayStr] = (streak.questionData[todayStr] || 0) + 1;
                     updateStreakStatsOnClockIn();
-                    saveAppData();
+                    saveData();
                     renderStreaks(streak.id, false);
                 });
             } else {
                 if (!isClockedToday) {
                     btn.addEventListener('click', () => {
-                        streak.history[todayStr] = (streak.history[todayStr] || 0) + 1;
+                        streak.history[todayStr] = 1;
                         updateStreakStatsOnClockIn();
-                        saveAppData();
+                        saveData();
                         renderStreaks(streak.id, true);
                     });
                 } else {
                     btn.addEventListener('click', () => {
-                        streak.history[todayStr] = streak.history[todayStr] + 1;
-                        saveAppData();
+                        streak.history[todayStr] = 0;
+                        streak.currentStreak = 0;
+                        saveData();
                         renderStreaks(streak.id, true);
                     });
                 }
@@ -1402,11 +1399,27 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const aiCard = document.createElement('div');
         aiCard.classList.add('message-card', 'ai-coach');
-        aiCard.innerHTML = `
-            <h3><span class="material-symbols-outlined" style="color: #00E5FF;">auto_awesome</span> Your Daily Coach ✨</h3>
-            <p style="font-style: italic; color: var(--text-muted);">${coachMessage ? coachMessage : "Thinking..."}</p>
-            <div class="ai-label">Powered by Gemini</div>
-        `;
+
+        const h3 = document.createElement('h3');
+        const iconSpan = document.createElement('span');
+        iconSpan.className = 'material-symbols-outlined';
+        iconSpan.style.color = '#00E5FF';
+        iconSpan.textContent = 'auto_awesome';
+        h3.appendChild(iconSpan);
+        h3.appendChild(document.createTextNode(' Your Daily Coach ✨'));
+        aiCard.appendChild(h3);
+
+        const p = document.createElement('p');
+        p.style.fontStyle = 'italic';
+        p.style.color = 'var(--text-muted)';
+        p.textContent = coachMessage ? coachMessage : "Thinking...";
+        aiCard.appendChild(p);
+
+        const label = document.createElement('div');
+        label.className = 'ai-label';
+        label.textContent = 'Powered by Gemini';
+        aiCard.appendChild(label);
+
         messagesContainer.appendChild(aiCard);
 
         if (!coachMessage) {
@@ -1460,10 +1473,18 @@ document.addEventListener('DOMContentLoaded', () => {
             if (msg.type === 'info') icon = 'lightbulb';
             if (msg.type === 'reminder') icon = 'schedule';
 
-            card.innerHTML = `
-                <h3><span class="material-symbols-outlined">${icon}</span> ${msg.title}</h3>
-                <p>${msg.text}</p>
-            `;
+            const h3 = document.createElement('h3');
+            const iconSpan = document.createElement('span');
+            iconSpan.className = 'material-symbols-outlined';
+            iconSpan.textContent = icon;
+            h3.appendChild(iconSpan);
+            const titleText = document.createTextNode(' ' + msg.title);
+            h3.appendChild(titleText);
+            card.appendChild(h3);
+
+            const p = document.createElement('p');
+            p.textContent = msg.text;
+            card.appendChild(p);
 
             card.addEventListener('click', () => {
                 if (msg.action === 'STREAKS') {
@@ -1503,10 +1524,22 @@ document.addEventListener('DOMContentLoaded', () => {
         conversationHistory.forEach(msg => {
             const bubble = document.createElement('div');
             bubble.classList.add('chat-bubble', msg.role);
-            bubble.innerHTML = `
-                <div>${msg.text.replace(/\n/g, '<br>')}</div>
-                <span class="chat-time">${msg.time}</span>
-            `;
+
+            const textDiv = document.createElement('div');
+            const lines = msg.text.split('\n');
+            lines.forEach((line, index) => {
+                if (index > 0) {
+                    textDiv.appendChild(document.createElement('br'));
+                }
+                textDiv.appendChild(document.createTextNode(line));
+            });
+            bubble.appendChild(textDiv);
+
+            const timeSpan = document.createElement('span');
+            timeSpan.className = 'chat-time';
+            timeSpan.textContent = msg.time;
+            bubble.appendChild(timeSpan);
+
             aiChatMessages.appendChild(bubble);
         });
         aiChatMessages.scrollTop = aiChatMessages.scrollHeight;
