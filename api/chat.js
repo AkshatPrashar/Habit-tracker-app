@@ -1,18 +1,24 @@
 exports.default = async (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Content-Type', 'application/json');
+
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
-  const CORS_HEADERS = {
-    'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type'
-  };
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
 
   try {
-    const body = req.body || {};
-    const messages = body.messages || [];
-    const streakData = body.streakData || [];
+    let body = req.body;
+    if (typeof body === 'string') {
+      body = JSON.parse(body);
+    }
+    const messages = body?.messages || [];
+    const streakData = body?.streakData || [];
 
     const lastUserMessage = messages.filter(m => m.role === 'user').pop();
     const userText = lastUserMessage?.text?.toLowerCase().trim() || '';
