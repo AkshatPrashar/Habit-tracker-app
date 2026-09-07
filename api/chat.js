@@ -13,10 +13,18 @@ exports.default = async (req, res) => {
   }
 
   try {
-    let body = req.body;
-    if (typeof body === 'string') {
-      body = JSON.parse(body);
+    let body = '';
+
+    // Handle if body is already parsed
+    if (typeof req.body === 'object') {
+      body = req.body;
+    } else if (typeof req.body === 'string') {
+      body = JSON.parse(req.body);
+    } else {
+      // If body is not available, return error
+      return res.status(400).json({ error: 'Request body required' });
     }
+
     const messages = body?.messages || [];
     const streakData = body?.streakData || [];
 
