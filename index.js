@@ -127,7 +127,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   // Handle API routes
-  if (pathname === '/.netlify/functions/ai-chat' || pathname === '/api/chat') {
+  if (pathname.startsWith('/.netlify/functions/ai-chat') || pathname.startsWith('/api/chat')) {
     if (req.method !== 'POST') {
       res.writeHead(405, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ error: 'Method not allowed' }));
@@ -155,7 +155,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   // Handle coach API route
-  if (pathname === '/.netlify/functions/ai-coach' || pathname === '/api/coach') {
+  if (pathname.startsWith('/.netlify/functions/ai-coach') || pathname.startsWith('/api/coach')) {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     const motivations = [
       "🔥 Every day is a new opportunity to build momentum. Keep that streak alive!",
