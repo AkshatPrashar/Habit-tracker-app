@@ -1,5 +1,6 @@
 src/
 server.js
+index.js
 package.json
 .env
 netlify.toml
