@@ -63,7 +63,7 @@ async function handleChatRequest(body) {
 
   // Greetings - show menu options
   const greetings = ['hi', 'hello', 'hey', 'start', 'help', 'menu', 'what can you do'];
-  if (greetings.some(g => userText.includes(g)) && messages.length <= 1) {
+  if (greetings.some(g => userText.includes(g))) {
     return {
       reply: `Hey there! 👋 I'm your Streak Coach. What would you like to know?\n\n📊 *Streaks Analysis* - See all your habits and their current streaks\n🎯 *Where You Lack* - Find habits that need attention\n📈 *Your Stats* - View detailed streak statistics\n🏆 *Motivation* - Get an inspiring message\n💡 *Tips* - Get habit-building tips`
     };
