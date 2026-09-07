@@ -1,56 +1,69 @@
-exports.default = async (req, res) => {
+module.exports = async (req, res) => {
+  if (req.method === 'OPTIONS') {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.statusCode = 200;
+    res.end();
+    return;
+  }
+
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   res.setHeader('Content-Type', 'application/json');
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+    res.statusCode = 405;
+    res.end(JSON.stringify({ error: 'Method not allowed' }));
+    return;
   }
 
   try {
     let body = '';
-
-    // Handle if body is already parsed
-    if (typeof req.body === 'object') {
-      body = req.body;
-    } else if (typeof req.body === 'string') {
-      body = JSON.parse(req.body);
-    } else {
-      // If body is not available, return error
-      return res.status(400).json({ error: 'Request body required' });
+    for await (const chunk of req) {
+      body += chunk.toString();
     }
 
-    const messages = body?.messages || [];
-    const streakData = body?.streakData || [];
+    let parsedBody = {};
+    if (body) {
+      parsedBody = JSON.parse(body);
+    }
+
+    const messages = parsedBody?.messages || [];
+    const streakData = parsedBody?.streakData || [];
 
     const lastUserMessage = messages.filter(m => m.role === 'user').pop();
     const userText = lastUserMessage?.text?.toLowerCase().trim() || '';
 
     const greetings = ['hi', 'hello', 'hey', 'start', 'help', 'menu', 'what can you do'];
     if (greetings.some(g => userText.includes(g)) && messages.length <= 1) {
-      return res.status(200).json({
+      res.statusCode = 200;
+      res.end(JSON.stringify({
         reply: `Hey there! 👋 I'm your Streak Coach. What would you like to know?\n\n📊 *Streaks Analysis* - See all your habits and their current streaks\n🎯 *Where You Lack* - Find habits that need attention\n📈 *Your Stats* - View detailed streak statistics\n🏆 *Motivation* - Get an inspiring message\n💡 *Tips* - Get habit-building tips`
-      });
+      }));
+      return;
     }
 
     if (userText.includes('streaks') || userText.includes('analysis')) {
-      const streakSummary = formatStreakAnalysis(streakData);
-      return res.status(200).json({ reply: streakSummary });
+      const reply = formatStreakAnalysis(streakData);
+      res.statusCode = 200;
+      res.end(JSON.stringify({ reply }));
+      return;
     }
 
     if (userText.includes('lack') || userText.includes('attention')) {
-      const lackingSummary = formatLackingHabits(streakData);
-      return res.status(200).json({ reply: lackingSummary });
+      const reply = formatLackingHabits(streakData);
+      res.statusCode = 200;
+      res.end(JSON.stringify({ reply }));
+      return;
     }
 
     if (userText.includes('stats') || userText.includes('statistics')) {
-      const statsSummary = formatStats(streakData);
-      return res.status(200).json({ reply: statsSummary });
+      const reply = formatStats(streakData);
+      res.statusCode = 200;
+      res.end(JSON.stringify({ reply }));
+      return;
     }
 
     if (userText.includes('motivation') || userText.includes('inspiring')) {
@@ -62,7 +75,9 @@ exports.default = async (req, res) => {
         "🏅 You've got this! Your future self will thank you."
       ];
       const motivation = motivations[Math.floor(Math.random() * motivations.length)];
-      return res.status(200).json({ reply: motivation });
+      res.statusCode = 200;
+      res.end(JSON.stringify({ reply: motivation }));
+      return;
     }
 
     if (userText.includes('tip') || userText.includes('advice')) {
@@ -74,16 +89,20 @@ exports.default = async (req, res) => {
         "⏰ Pick a time: Do your habit at the same time daily for better results."
       ];
       const tip = tips[Math.floor(Math.random() * tips.length)];
-      return res.status(200).json({ reply: tip });
+      res.statusCode = 200;
+      res.end(JSON.stringify({ reply: tip }));
+      return;
     }
 
-    return res.status(200).json({
+    res.statusCode = 200;
+    res.end(JSON.stringify({
       reply: "I didn't quite understand that. Try asking about your *Streaks Analysis*, *Where You Lack*, *Your Stats*, *Motivation*, or *Tips*!"
-    });
+    }));
 
   } catch (err) {
     console.error('Chat API error:', err);
-    return res.status(200).json({ reply: "Something went wrong. Please try again!" });
+    res.statusCode = 500;
+    res.end(JSON.stringify({ reply: "Something went wrong. Please try again!" }));
   }
 };
 
