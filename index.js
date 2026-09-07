@@ -146,7 +146,7 @@ const server = http.createServer(async (req, res) => {
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(reply));
       } catch (err) {
-        console.error('API error:', err);
+        console.error('Chat API error:', err);
         res.writeHead(500, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ reply: 'Something went wrong. Please try again!' }));
       }
