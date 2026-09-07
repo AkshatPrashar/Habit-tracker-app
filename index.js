@@ -11,7 +11,7 @@ function formatStreakAnalysis(streakData) {
     return "📊 You haven't created any streaks yet! Start by adding a habit to track.";
   }
 
-  let analysis = "📊 **Your Streak Analysis**\n\n";
+  let analysis = "📊 Your Streak Analysis\n\n";
   streakData.forEach(streak => {
     analysis += `✓ ${streak.name || 'Unnamed'}\n  Current: ${streak.currentStreak || 0} days | Best: ${streak.longestStreak || 0} days\n\n`;
   });
@@ -28,7 +28,7 @@ function formatLackingHabits(streakData) {
     return "🔥 Amazing! All your habits are going strong. Keep the momentum!";
   }
 
-  let message = "⚠️ **Habits That Need Attention**\n\n";
+  let message = "⚠️ Habits That Need Attention\n\n";
   lacking.forEach(streak => {
     message += `• ${streak.name || 'Unnamed'} (${streak.currentStreak || 0} days)\n`;
   });
@@ -46,7 +46,7 @@ function formatStats(streakData) {
   const bestStreak = Math.max(...streakData.map(s => s.longestStreak || 0));
   const totalDays = streakData.reduce((sum, s) => sum + (s.currentStreak || 0), 0);
 
-  return `📈 **Your Habit Statistics**\n\n` +
+  return `📈 Your Habit Statistics\n\n` +
     `Total Habits: ${totalStreaks}\n` +
     `Active Streaks: ${activeStreaks}\n` +
     `Best Streak Ever: ${bestStreak} days\n` +
@@ -65,7 +65,7 @@ async function handleChatRequest(body) {
   const greetings = ['hi', 'hello', 'hey', 'start', 'help', 'menu', 'what can you do'];
   if (greetings.some(g => userText.includes(g))) {
     return {
-      reply: `Hey there! 👋 I'm your Streak Coach. What would you like to know?\n\n📊 *Streaks Analysis* - See all your habits and their current streaks\n🎯 *Where You Lack* - Find habits that need attention\n📈 *Your Stats* - View detailed streak statistics\n🏆 *Motivation* - Get an inspiring message\n💡 *Tips* - Get habit-building tips`
+      reply: `Hey there! 👋 I'm your Streak Coach. What would you like to know?\n\n📊 Streaks Analysis - See all your habits and their current streaks\n🎯 Where You Lack - Find habits that need attention\n📈 Your Stats - View detailed streak statistics\n🏆 Motivation - Get an inspiring message\n💡 Tips - Get habit-building tips`
     };
   }
 
@@ -106,7 +106,7 @@ async function handleChatRequest(body) {
   }
 
   return {
-    reply: "I didn't quite understand that. Try asking about your *Streaks Analysis*, *Where You Lack*, *Your Stats*, *Motivation*, or *Tips*!"
+    reply: "I didn't quite understand that. Try asking about Streaks Analysis, Where You Lack, Your Stats, Motivation, or Tips!"
   };
 }
 
