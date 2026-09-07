@@ -154,6 +154,21 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // Handle coach API route
+  if (pathname === '/.netlify/functions/ai-coach' || pathname === '/api/coach') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    const motivations = [
+      "🔥 Every day is a new opportunity to build momentum. Keep that streak alive!",
+      "💪 You're crushing it! Consistency is the secret to success.",
+      "⚡ Small steps lead to big wins. Keep going!",
+      "🎯 Focus on today. That's all that matters.",
+      "🏅 You've got this! Your future self will thank you."
+    ];
+    const message = motivations[Math.floor(Math.random() * motivations.length)];
+    res.end(JSON.stringify({ message }));
+    return;
+  }
+
   // Serve static files
   let filePath = path.join(__dirname, 'public', pathname);
 

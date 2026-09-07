@@ -1411,7 +1411,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!coachMessage) {
             try {
-                const res = await fetch("/.netlify/functions/ai-coach", {
+                const res = await fetch("/api/coach", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ streaks: appData.streaks })
@@ -1586,7 +1586,7 @@ document.addEventListener('DOMContentLoaded', () => {
         aiChatMessages.scrollTop = aiChatMessages.scrollHeight;
 
         try {
-            const res = await fetch("/.netlify/functions/ai-chat", {
+            const res = await fetch("/api/chat", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ messages: conversationHistory, streakData: appData.streaks })
