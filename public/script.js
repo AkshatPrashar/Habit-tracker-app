@@ -1,3 +1,100 @@
+// ===== AUTHENTICATION MODULE =====
+const Auth = (() => {
+    const TOKEN_KEY = 'streakies_token';
+    const EMAIL_KEY = 'streakies_email';
+
+    const getToken = () => localStorage.getItem(TOKEN_KEY);
+    const getEmail = () => localStorage.getItem(EMAIL_KEY);
+    const isLoggedIn = () => !!getToken();
+
+    const login = async (email, password) => {
+        const res = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+        if (!res.ok) throw new Error('Login failed');
+        const { token } = await res.json();
+        localStorage.setItem(TOKEN_KEY, token);
+        localStorage.setItem(EMAIL_KEY, email);
+        return token;
+    };
+
+    const register = async (email, password) => {
+        const res = await fetch('/api/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+        if (!res.ok) throw new Error('Registration failed');
+        const { token } = await res.json();
+        localStorage.setItem(TOKEN_KEY, token);
+        localStorage.setItem(EMAIL_KEY, email);
+        return token;
+    };
+
+    const logout = () => {
+        localStorage.removeItem(TOKEN_KEY);
+        localStorage.removeItem(EMAIL_KEY);
+    };
+
+    return { getToken, getEmail, isLoggedIn, login, register, logout };
+})();
+
+// Initialize auth modal
+document.addEventListener('DOMContentLoaded', () => {
+    const authModal = document.getElementById('authModal');
+    const authForm = document.getElementById('authForm');
+    const authEmail = document.getElementById('authEmail');
+    const authPassword = document.getElementById('authPassword');
+    const authSubmitBtn = document.getElementById('authSubmitBtn');
+    const authToggleBtn = document.getElementById('authToggleBtn');
+    const authToggleText = document.getElementById('authToggleText');
+    const authError = document.getElementById('authError');
+    const appContainer = document.querySelector('.app-container');
+
+    let isSignUp = false;
+
+    if (Auth.isLoggedIn()) {
+        authModal.classList.add('hidden');
+        appContainer.style.display = '';
+    } else {
+        authModal.style.display = 'flex';
+        appContainer.style.display = 'none';
+    }
+
+    authToggleBtn.addEventListener('click', () => {
+        isSignUp = !isSignUp;
+        authSubmitBtn.textContent = isSignUp ? 'Sign Up' : 'Sign In';
+        authToggleText.innerHTML = isSignUp
+            ? 'Already have an account? <button type="button" id="authToggleBtn" style="background:none; border:none; color:#D6FF4D; cursor:pointer; text-decoration:underline;">Sign In</button>'
+            : 'Don\'t have an account? <button type="button" id="authToggleBtn" style="background:none; border:none; color:#D6FF4D; cursor:pointer; text-decoration:underline;">Sign Up</button>';
+        document.getElementById('authToggleBtn').addEventListener('click', authToggleBtn.click.bind(authToggleBtn));
+    });
+
+    authForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        authError.style.display = 'none';
+        authSubmitBtn.disabled = true;
+
+        try {
+            if (isSignUp) {
+                await Auth.register(authEmail.value, authPassword.value);
+            } else {
+                await Auth.login(authEmail.value, authPassword.value);
+            }
+            authModal.classList.add('hidden');
+            appContainer.style.display = '';
+            location.reload();
+        } catch (err) {
+            authError.textContent = err.message;
+            authError.style.display = 'block';
+        } finally {
+            authSubmitBtn.disabled = false;
+        }
+    });
+});
+
 document.addEventListener('DOMContentLoaded', () => {
     // --- State ---
     const currentDate = new Date();
@@ -1426,7 +1523,10 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 const res = await fetch("/api/coach", {
                     method: "POST",
-                    headers: { "Content-Type": "application/json" },
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${Auth.getToken()}`
+                    },
                     body: JSON.stringify({ streaks: appData.streaks })
                 });
                 const data = await res.json();
@@ -1621,7 +1721,10 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const res = await fetch("/api/chat", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${Auth.getToken()}`
+                },
                 body: JSON.stringify({ messages: conversationHistory, streakData: appData.streaks })
             });
             const data = await res.json();
