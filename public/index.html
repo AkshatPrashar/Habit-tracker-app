@@ -19,19 +19,24 @@
 <body>
     <!-- Auth Modal -->
     <div id="authModal" class="auth-modal" style="display: flex;">
+        <div class="auth-modal-bg"></div>
         <div class="auth-modal-content">
-            <h1>Streakies</h1>
-            <p>Track your habits, build momentum</p>
+            <h2>Sign up below to unlock the full potential of Streakies.</h2>
+            <p class="auth-subtitle">By continuing, you agree to our terms</p>
 
-            <form id="authForm">
-                <input type="email" id="authEmail" placeholder="Email" required>
+            <form id="authForm" class="auth-form">
+                <input type="email" id="authEmail" placeholder="Enter your email" required>
                 <input type="password" id="authPassword" placeholder="Password" required>
-                <button type="submit" id="authSubmitBtn">Sign In</button>
+                <button type="submit" id="authSubmitBtn" class="auth-btn-primary">Continue with email</button>
             </form>
 
-            <p id="authToggleText">Don't have an account? <button type="button" id="authToggleBtn" style="background:none; border:none; color:#D6FF4D; cursor:pointer; text-decoration:underline;">Sign Up</button></p>
+            <p id="authToggleText" class="auth-toggle">
+                Already have an account? <button type="button" id="authToggleBtn" class="auth-link">Sign In</button>
+            </p>
 
-            <div id="authError" style="color: #ff4444; margin-top: 10px; display: none;"></div>
+            <div id="authError" style="color: #ff4444; margin-top: 15px; display: none; text-align: center;"></div>
+
+            <button type="button" class="auth-close" onclick="document.getElementById('authModal').classList.add('hidden')">Close</button>
         </div>
     </div>
 

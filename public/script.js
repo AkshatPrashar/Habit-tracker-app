@@ -63,13 +63,23 @@ document.addEventListener('DOMContentLoaded', () => {
         appContainer.style.display = 'none';
     }
 
-    authToggleBtn.addEventListener('click', () => {
+    authToggleBtn.addEventListener('click', (e) => {
+        e.preventDefault();
         isSignUp = !isSignUp;
-        authSubmitBtn.textContent = isSignUp ? 'Sign Up' : 'Sign In';
+        authSubmitBtn.textContent = isSignUp ? 'Continue with email' : 'Continue with email';
         authToggleText.innerHTML = isSignUp
-            ? 'Already have an account? <button type="button" id="authToggleBtn" style="background:none; border:none; color:#D6FF4D; cursor:pointer; text-decoration:underline;">Sign In</button>'
-            : 'Don\'t have an account? <button type="button" id="authToggleBtn" style="background:none; border:none; color:#D6FF4D; cursor:pointer; text-decoration:underline;">Sign Up</button>';
-        document.getElementById('authToggleBtn').addEventListener('click', authToggleBtn.click.bind(authToggleBtn));
+            ? 'Already have an account? <button type="button" class="auth-link">Sign In</button>'
+            : 'Don\'t have an account? <button type="button" class="auth-link">Sign Up</button>';
+        document.querySelectorAll('.auth-link').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                isSignUp = !isSignUp;
+                authToggleText.innerHTML = isSignUp
+                    ? 'Already have an account? <button type="button" class="auth-link">Sign In</button>'
+                    : 'Don\'t have an account? <button type="button" class="auth-link">Sign Up</button>';
+                document.querySelectorAll('.auth-link').forEach(b => b.addEventListener('click', arguments.callee));
+            });
+        });
     });
 
     authForm.addEventListener('submit', async (e) => {
