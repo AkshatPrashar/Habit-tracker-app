@@ -5,10 +5,8 @@ import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import connectDB from './db/connectDB.js';
 
 dotenv.config();
-await connectDB();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
