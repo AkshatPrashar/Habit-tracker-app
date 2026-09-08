@@ -1,0 +1,31 @@
+{
+  "name": "streakies",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "A habit tracking app with AI coaching",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js"
+  },
+  "keywords": [
+    "habit",
+    "tracking",
+    "streak"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^5.2.1",
+    "mongoose": "^9.9.3",
+    "cors": "^2.8.6",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^17.4.2",
+    "jsonwebtoken": "^9.0.3",
+    "bcrypt": "^6.0.0",
+    "express-validator": "^7.3.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}
