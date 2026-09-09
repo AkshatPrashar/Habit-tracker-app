@@ -1,15 +1,23 @@
 import mongoose from "mongoose";
-import dns from "dns";
-
-dns.setServers(["8.8.8.8", "8.8.4.4"]);
 
 const connectDB = async () => {
   try {
-    await mongoose.connect(process.env.MONGO_URI);
+    console.log("🔄 Connecting to MongoDB...");
+    console.log("📍 URI:", process.env.MONGO_URI.substring(0, 50) + "...");
+
+    const connection = await mongoose.connect(process.env.MONGO_URI, {
+      socketTimeoutMS: 45000,
+      serverSelectionTimeoutMS: 5000,
+      connectTimeoutMS: 10000,
+    });
+
     console.log("✅ MongoDB connected!");
+    console.log("📊 Database:", connection.connection.db.name);
+    return connection;
   } catch (error) {
-    console.log("❌ MongoDB connection error:", error.message);
-    process.exit(1);
+    console.error("❌ MongoDB connection error:", error.message);
+    console.error("Stack:", error.stack);
+    throw error;
   }
 };
 
