@@ -1,4 +1,7 @@
 import mongoose from "mongoose";
+import dns from "dns";
+
+dns.setDefaultResultOrder('ipv4first');
 
 const connectDB = async () => {
   try {
@@ -6,14 +9,15 @@ const connectDB = async () => {
     console.log("📍 URI:", process.env.MONGO_URI.substring(0, 50) + "...");
 
     const connection = await mongoose.connect(process.env.MONGO_URI, {
+      family: 4,
       retryWrites: true,
       w: "majority",
       authSource: "admin",
       maxPoolSize: 10,
       minPoolSize: 5,
       socketTimeoutMS: 45000,
-      serverSelectionTimeoutMS: 10000,
-      connectTimeoutMS: 10000,
+      serverSelectionTimeoutMS: 15000,
+      connectTimeoutMS: 15000,
     });
 
     console.log("✅ MongoDB connected!");
