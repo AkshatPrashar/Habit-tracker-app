@@ -7,6 +7,8 @@ const connectDB = async () => {
   try {
     console.log("🔄 Connecting to MongoDB...");
     console.log("📍 URI:", process.env.MONGO_URI.substring(0, 50) + "...");
+    console.log("🔍 DNS Servers:", dns.getServers());
+    console.log("📦 MongoDB URI exists:", !!process.env.MONGO_URI);
 
     const connection = await mongoose.connect(process.env.MONGO_URI, {
       family: 4,
@@ -25,6 +27,7 @@ const connectDB = async () => {
     return connection;
   } catch (error) {
     console.error("❌ MongoDB connection error:", error.message);
+    console.error("📋 Full error:", error);
     throw error;
   }
 };
