@@ -11,11 +11,11 @@ const mailgen = new Mailgen({
 });
 
 const transporter = nodemailer.createTransport({
-  host: process.env.MAILTRAP_HOST,
-  port: process.env.MAILTRAP_PORT,
+  host: process.env.MAILTRAP_SMTP_HOST,
+  port: Number(process.env.MAILTRAP_SMTP_PORT),
   auth: {
-    user: process.env.MAILTRAP_USER,
-    pass: process.env.MAILTRAP_PASSWORD,
+    user: process.env.MAILTRAP_SMTP_USER,
+    pass: process.env.MAILTRAP_SMTP_PASS,
   },
 });
 
@@ -36,7 +36,7 @@ export const sendVerificationEmail = async (email, verificationLink) => {
   });
 
   const mailOptions = {
-    from: process.env.MAILTRAP_FROM_EMAIL,
+    from: 'noreply@streakies.com',
     to: email,
     subject: 'Email Verification - Streakies',
     html: emailBody,

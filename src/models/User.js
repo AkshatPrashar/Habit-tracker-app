@@ -74,8 +74,8 @@ userSchema.methods.generateAccessToken = function () {
       email: this.email,
       username: this.username,
     },
-    process.env.JWT_SECRET,
-    { expiresIn: process.env.ACCESS_TOKEN_EXPIRY || '15m' }
+    process.env.ACCESS_TOKEN_SECRET,
+    { expiresIn: process.env.ACCESS_TOKEN_EXPIRY || '1d' }
   );
 };
 
@@ -86,8 +86,8 @@ userSchema.methods.generateRefreshToken = function () {
       email: this.email,
       username: this.username,
     },
-    process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_EXPIRY || '7d' }
+    process.env.REFRESH_TOKEN_SECRET,
+    { expiresIn: process.env.REFRESH_TOKEN_EXPIRY || '10d' }
   );
 };
 
