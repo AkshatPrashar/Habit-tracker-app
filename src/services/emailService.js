@@ -10,6 +10,12 @@ const mailgen = new Mailgen({
   },
 });
 
+console.log('📧 Mailtrap Config:');
+console.log('  Host:', process.env.MAILTRAP_SMTP_HOST);
+console.log('  Port:', process.env.MAILTRAP_SMTP_PORT);
+console.log('  User:', process.env.MAILTRAP_SMTP_USER ? '✓' : '❌ Missing');
+console.log('  Pass:', process.env.MAILTRAP_SMTP_PASS ? '✓' : '❌ Missing');
+
 const transporter = nodemailer.createTransport({
   host: process.env.MAILTRAP_SMTP_HOST,
   port: Number(process.env.MAILTRAP_SMTP_PORT),
