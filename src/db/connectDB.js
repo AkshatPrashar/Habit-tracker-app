@@ -6,8 +6,13 @@ const connectDB = async () => {
     console.log("📍 URI:", process.env.MONGO_URI.substring(0, 50) + "...");
 
     const connection = await mongoose.connect(process.env.MONGO_URI, {
+      retryWrites: true,
+      w: "majority",
+      authSource: "admin",
+      maxPoolSize: 10,
+      minPoolSize: 5,
       socketTimeoutMS: 45000,
-      serverSelectionTimeoutMS: 5000,
+      serverSelectionTimeoutMS: 10000,
       connectTimeoutMS: 10000,
     });
 
@@ -16,7 +21,6 @@ const connectDB = async () => {
     return connection;
   } catch (error) {
     console.error("❌ MongoDB connection error:", error.message);
-    console.error("Stack:", error.stack);
     throw error;
   }
 };
