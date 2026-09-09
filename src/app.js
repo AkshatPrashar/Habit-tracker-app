@@ -2,9 +2,9 @@ import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
-import jwt from 'jsonwebtoken';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import authRoutes from './routes/auth.routes.js';
 
 dotenv.config();
 
@@ -15,47 +15,8 @@ app.use(express.json());
 app.use(cors());
 app.use(cookieParser());
 
-// Middleware to verify JWT token
-const verifyToken = (req, res, next) => {
-  const token = req.headers.authorization?.split(' ')[1];
-  if (!token) {
-    return res.status(401).json({ error: 'No token provided' });
-  }
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
-    next();
-  } catch (error) {
-    res.status(401).json({ error: 'Invalid token' });
-  }
-};
-
 // Auth routes
-app.post('/api/auth/register', (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password) {
-    return res.status(400).json({ error: 'Email and password required' });
-  }
-  const token = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '7d' });
-  res.json({ token, email });
-});
-
-app.post('/api/auth/login', (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password) {
-    return res.status(400).json({ error: 'Email and password required' });
-  }
-  const token = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '7d' });
-  res.json({ token, email });
-});
-
-app.post('/api/auth/logout', (req, res) => {
-  res.json({ message: 'Logged out successfully' });
-});
-
-app.get('/api/auth/me', verifyToken, (req, res) => {
-  res.json({ user: req.user });
-});
+app.use('/api/auth', authRoutes);
 
 // Chatbot logic functions
 function formatStreakAnalysis(streakData) {
