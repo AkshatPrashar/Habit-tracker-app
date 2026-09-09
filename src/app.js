@@ -144,12 +144,7 @@ app.post('/api/coach', (req, res) => {
 // Serve static files from public folder
 app.use(express.static(path.join(__dirname, '../public')));
 
-// SPA fallback - serve index.html for all unmatched routes
-app.use((req, res) => {
-  res.sendFile(path.join(__dirname, '../public/index.html'));
-});
-
-// Error handling middleware
+// Error handling middleware (must come before SPA fallback)
 app.use((err, req, res, next) => {
   if (err instanceof ApiError) {
     return res.status(err.statusCode).json({
@@ -165,6 +160,11 @@ app.use((err, req, res, next) => {
     message: err.message || 'Internal Server Error',
     success: false,
   });
+});
+
+// SPA fallback - serve index.html for all unmatched routes
+app.use((req, res) => {
+  res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 
 export default app;
