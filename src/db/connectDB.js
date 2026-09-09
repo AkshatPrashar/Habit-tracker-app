@@ -12,6 +12,7 @@ const connectDB = async () => {
 
     const connection = await mongoose.connect(process.env.MONGO_URI, {
       family: 4,
+      directConnection: true,
       retryWrites: true,
       w: "majority",
       authSource: "admin",
