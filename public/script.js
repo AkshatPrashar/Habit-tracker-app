@@ -1,11 +1,41 @@
 // ===== AUTHENTICATION MODULE =====
 const Auth = (() => {
-    const TOKEN_KEY = 'streakies_token';
+    const ACCESS_TOKEN_KEY = 'streakies_access_token';
+    const REFRESH_TOKEN_KEY = 'streakies_refresh_token';
     const EMAIL_KEY = 'streakies_email';
 
-    const getToken = () => localStorage.getItem(TOKEN_KEY);
+    const getAccessToken = () => localStorage.getItem(ACCESS_TOKEN_KEY);
+    const getRefreshToken = () => localStorage.getItem(REFRESH_TOKEN_KEY);
     const getEmail = () => localStorage.getItem(EMAIL_KEY);
-    const isLoggedIn = () => !!getToken();
+    const isLoggedIn = () => !!getAccessToken();
+
+    const setTokens = (accessToken, refreshToken, email) => {
+        localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
+        localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+        localStorage.setItem(EMAIL_KEY, email);
+    };
+
+    const getToken = () => getAccessToken();
+
+    const refreshAccessToken = async () => {
+        const refreshToken = getRefreshToken();
+        if (!refreshToken) throw new Error('No refresh token available');
+
+        const res = await fetch('/api/auth/refresh', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refreshToken })
+        });
+
+        if (!res.ok) {
+            logout();
+            throw new Error('Failed to refresh token');
+        }
+
+        const { data } = await res.json();
+        localStorage.setItem(ACCESS_TOKEN_KEY, data.accessToken);
+        return data.accessToken;
+    };
 
     const login = async (email, password) => {
         const res = await fetch('/api/auth/login', {
@@ -14,10 +44,9 @@ const Auth = (() => {
             body: JSON.stringify({ email, password })
         });
         if (!res.ok) throw new Error('Login failed');
-        const { token } = await res.json();
-        localStorage.setItem(TOKEN_KEY, token);
-        localStorage.setItem(EMAIL_KEY, email);
-        return token;
+        const { data } = await res.json();
+        setTokens(data.accessToken, data.refreshToken, email);
+        return data.accessToken;
     };
 
     const register = async (email, password) => {
@@ -27,18 +56,28 @@ const Auth = (() => {
             body: JSON.stringify({ email, password })
         });
         if (!res.ok) throw new Error('Registration failed');
-        const { token } = await res.json();
-        localStorage.setItem(TOKEN_KEY, token);
-        localStorage.setItem(EMAIL_KEY, email);
-        return token;
+        const { data } = await res.json();
+        setTokens(data.accessToken, data.refreshToken, email);
+        return data.accessToken;
     };
 
-    const logout = () => {
-        localStorage.removeItem(TOKEN_KEY);
+    const logout = async () => {
+        const refreshToken = getRefreshToken();
+        try {
+            await fetch('/api/auth/logout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ refreshToken })
+            });
+        } catch (err) {
+            console.error('Logout error:', err);
+        }
+        localStorage.removeItem(ACCESS_TOKEN_KEY);
+        localStorage.removeItem(REFRESH_TOKEN_KEY);
         localStorage.removeItem(EMAIL_KEY);
     };
 
-    return { getToken, getEmail, isLoggedIn, login, register, logout };
+    return { getToken, getAccessToken, getRefreshToken, getEmail, isLoggedIn, login, register, logout, refreshAccessToken };
 })();
 
 // Initialize auth modal

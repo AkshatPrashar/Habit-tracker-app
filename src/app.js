@@ -5,6 +5,8 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import authRoutes from './routes/auth.routes.js';
+import { ApiResponse } from './utils/ApiResponse.js';
+import { ApiError } from './utils/ApiError.js';
 
 dotenv.config();
 
@@ -145,6 +147,24 @@ app.use(express.static(path.join(__dirname, '../public')));
 // SPA fallback - serve index.html for all unmatched routes
 app.use((req, res) => {
   res.sendFile(path.join(__dirname, '../public/index.html'));
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  if (err instanceof ApiError) {
+    return res.status(err.statusCode).json({
+      statusCode: err.statusCode,
+      message: err.message,
+      errors: err.errors,
+      success: false,
+    });
+  }
+
+  return res.status(500).json({
+    statusCode: 500,
+    message: err.message || 'Internal Server Error',
+    success: false,
+  });
 });
 
 export default app;
