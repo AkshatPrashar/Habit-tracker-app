@@ -10,20 +10,27 @@ const mailgen = new Mailgen({
   },
 });
 
-console.log('📧 Mailtrap Config:');
-console.log('  Host:', process.env.MAILTRAP_SMTP_HOST);
-console.log('  Port:', process.env.MAILTRAP_SMTP_PORT);
-console.log('  User:', process.env.MAILTRAP_SMTP_USER ? '✓' : '❌ Missing');
-console.log('  Pass:', process.env.MAILTRAP_SMTP_PASS ? '✓' : '❌ Missing');
+let transporter = null;
 
-const transporter = nodemailer.createTransport({
-  host: process.env.MAILTRAP_SMTP_HOST,
-  port: Number(process.env.MAILTRAP_SMTP_PORT),
-  auth: {
-    user: process.env.MAILTRAP_SMTP_USER,
-    pass: process.env.MAILTRAP_SMTP_PASS,
-  },
-});
+const getTransporter = () => {
+  console.log('📧 Mailtrap Config:');
+  console.log('  Host:', process.env.MAILTRAP_SMTP_HOST);
+  console.log('  Port:', process.env.MAILTRAP_SMTP_PORT);
+  console.log('  User:', process.env.MAILTRAP_SMTP_USER ? '✓' : '❌ Missing');
+  console.log('  Pass:', process.env.MAILTRAP_SMTP_PASS ? '✓' : '❌ Missing');
+
+  if (!transporter) {
+    transporter = nodemailer.createTransport({
+      host: process.env.MAILTRAP_SMTP_HOST,
+      port: Number(process.env.MAILTRAP_SMTP_PORT),
+      auth: {
+        user: process.env.MAILTRAP_SMTP_USER,
+        pass: process.env.MAILTRAP_SMTP_PASS,
+      },
+    });
+  }
+  return transporter;
+};
 
 export const sendVerificationEmail = async (email, verificationLink) => {
   const emailBody = mailgen.generate({
@@ -48,7 +55,7 @@ export const sendVerificationEmail = async (email, verificationLink) => {
     html: emailBody,
   };
 
-  return transporter.sendMail(mailOptions);
+  return getTransporter().sendMail(mailOptions);
 };
 
 export const sendForgotPasswordEmail = async (email, resetLink) => {
@@ -74,7 +81,7 @@ export const sendForgotPasswordEmail = async (email, resetLink) => {
     html: emailBody,
   };
 
-  return transporter.sendMail(mailOptions);
+  return getTransporter().sendMail(mailOptions);
 };
 
 export const sendLoginNotificationEmail = async (email) => {
@@ -100,7 +107,7 @@ export const sendLoginNotificationEmail = async (email) => {
     html: emailBody,
   };
 
-  return transporter.sendMail(mailOptions);
+  return getTransporter().sendMail(mailOptions);
 };
 
 export const sendLogoutNotificationEmail = async (email) => {
@@ -118,5 +125,5 @@ export const sendLogoutNotificationEmail = async (email) => {
     html: emailBody,
   };
 
-  return transporter.sendMail(mailOptions);
+  return getTransporter().sendMail(mailOptions);
 };
