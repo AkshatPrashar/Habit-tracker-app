@@ -8,42 +8,52 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 import { sendVerificationEmail, sendLoginNotificationEmail, sendLogoutNotificationEmail, sendForgotPasswordEmail } from '../services/emailService.js';
 
 export const register = asyncHandler(async (req, res) => {
-  const { email, password, username, fullName } = req.body;
+  try {
+    console.log('📝 Register: Starting registration...');
+    const { email, password, username, fullName } = req.body;
+    console.log('📝 Register: Got user data');
 
-  if (!email || !password || !username) {
-    throw new ApiError(400, 'Email, password, and username are required');
+    if (!email || !password || !username) {
+      throw new ApiError(400, 'Email, password, and username are required');
+    }
+
+    const existingUser = await User.findOne({ $or: [{ email }, { username }] });
+    if (existingUser) {
+      throw new ApiError(409, 'Email or username already exists');
+    }
+
+    const user = new User({
+      email: email.toLowerCase(),
+      password,
+      username: username.toLowerCase(),
+      fullName: fullName || username,
+    });
+
+    const { unHashedToken, hashedToken, tokenExpiry } = user.generateTemporaryToken();
+    user.emailVerificationToken = hashedToken;
+    user.emailVerificationExpiry = new Date(tokenExpiry);
+
+    await user.save();
+    console.log('📝 Register: User saved');
+
+    const verificationLink = `${process.env.CLIENT_URL || 'http://localhost:3000'}/verify-email?token=${unHashedToken}`;
+    console.log('📝 Register: Sending verification email...');
+    await sendVerificationEmail(email, verificationLink);
+    console.log('📝 Register: Email sent');
+
+    const accessToken = user.generateAccessToken();
+    const refreshToken = user.generateRefreshToken();
+
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    await RefreshToken.create({ token: refreshToken, userId: user._id, expiresAt });
+
+    res.status(201).json(
+      new ApiResponse(201, { accessToken, refreshToken, user: { _id: user._id, email: user.email, username: user.username } }, 'User registered successfully. Check your email for verification link.')
+    );
+  } catch (error) {
+    console.error('❌ Register Error:', error);
+    throw error;
   }
-
-  const existingUser = await User.findOne({ $or: [{ email }, { username }] });
-  if (existingUser) {
-    throw new ApiError(409, 'Email or username already exists');
-  }
-
-  const user = new User({
-    email: email.toLowerCase(),
-    password,
-    username: username.toLowerCase(),
-    fullName: fullName || username,
-  });
-
-  const { unHashedToken, hashedToken, tokenExpiry } = user.generateTemporaryToken();
-  user.emailVerificationToken = hashedToken;
-  user.emailVerificationExpiry = new Date(tokenExpiry);
-
-  await user.save();
-
-  const verificationLink = `${process.env.CLIENT_URL || 'http://localhost:3000'}/verify-email?token=${unHashedToken}`;
-  await sendVerificationEmail(email, verificationLink);
-
-  const accessToken = user.generateAccessToken();
-  const refreshToken = user.generateRefreshToken();
-
-  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-  await RefreshToken.create({ token: refreshToken, userId: user._id, expiresAt });
-
-  res.status(201).json(
-    new ApiResponse(201, { accessToken, refreshToken, user: { _id: user._id, email: user.email, username: user.username } }, 'User registered successfully. Check your email for verification link.')
-  );
 });
 
 export const verifyEmail = asyncHandler(async (req, res) => {
