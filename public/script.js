@@ -1,3 +1,149 @@
+// ===== AUTHENTICATION MODULE =====
+const Auth = (() => {
+    const ACCESS_TOKEN_KEY = 'streakies_access_token';
+    const REFRESH_TOKEN_KEY = 'streakies_refresh_token';
+    const EMAIL_KEY = 'streakies_email';
+
+    const getAccessToken = () => localStorage.getItem(ACCESS_TOKEN_KEY);
+    const getRefreshToken = () => localStorage.getItem(REFRESH_TOKEN_KEY);
+    const getEmail = () => localStorage.getItem(EMAIL_KEY);
+    const isLoggedIn = () => !!getAccessToken();
+
+    const setTokens = (accessToken, refreshToken, email) => {
+        localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
+        localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+        localStorage.setItem(EMAIL_KEY, email);
+    };
+
+    const getToken = () => getAccessToken();
+
+    const refreshAccessToken = async () => {
+        const refreshToken = getRefreshToken();
+        if (!refreshToken) throw new Error('No refresh token available');
+
+        const res = await fetch('/api/auth/refresh', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refreshToken })
+        });
+
+        if (!res.ok) {
+            logout();
+            throw new Error('Failed to refresh token');
+        }
+
+        const { data } = await res.json();
+        localStorage.setItem(ACCESS_TOKEN_KEY, data.accessToken);
+        return data.accessToken;
+    };
+
+    const login = async (email, password) => {
+        const res = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+        if (!res.ok) throw new Error('Login failed');
+        const { data } = await res.json();
+        setTokens(data.accessToken, data.refreshToken, email);
+        return data.accessToken;
+    };
+
+    const register = async (email, password) => {
+        const res = await fetch('/api/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+        if (!res.ok) throw new Error('Registration failed');
+        const { data } = await res.json();
+        setTokens(data.accessToken, data.refreshToken, email);
+        return data.accessToken;
+    };
+
+    const logout = async () => {
+        const refreshToken = getRefreshToken();
+        try {
+            await fetch('/api/auth/logout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ refreshToken })
+            });
+        } catch (err) {
+            console.error('Logout error:', err);
+        }
+        localStorage.removeItem(ACCESS_TOKEN_KEY);
+        localStorage.removeItem(REFRESH_TOKEN_KEY);
+        localStorage.removeItem(EMAIL_KEY);
+    };
+
+    return { getToken, getAccessToken, getRefreshToken, getEmail, isLoggedIn, login, register, logout, refreshAccessToken };
+})();
+
+// Initialize auth modal
+document.addEventListener('DOMContentLoaded', () => {
+    const authModal = document.getElementById('authModal');
+    const authForm = document.getElementById('authForm');
+    const authEmail = document.getElementById('authEmail');
+    const authPassword = document.getElementById('authPassword');
+    const authSubmitBtn = document.getElementById('authSubmitBtn');
+    const authToggleBtn = document.getElementById('authToggleBtn');
+    const authToggleText = document.getElementById('authToggleText');
+    const authError = document.getElementById('authError');
+    const appContainer = document.querySelector('.app-container');
+
+    let isSignUp = false;
+
+    if (Auth.isLoggedIn()) {
+        authModal.classList.add('hidden');
+        appContainer.style.display = '';
+    } else {
+        authModal.style.display = 'flex';
+        appContainer.style.display = 'none';
+    }
+
+    authToggleBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        isSignUp = !isSignUp;
+        authSubmitBtn.textContent = isSignUp ? 'Continue with email' : 'Continue with email';
+        authToggleText.innerHTML = isSignUp
+            ? 'Already have an account? <button type="button" class="auth-link">Sign In</button>'
+            : 'Don\'t have an account? <button type="button" class="auth-link">Sign Up</button>';
+        document.querySelectorAll('.auth-link').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                isSignUp = !isSignUp;
+                authToggleText.innerHTML = isSignUp
+                    ? 'Already have an account? <button type="button" class="auth-link">Sign In</button>'
+                    : 'Don\'t have an account? <button type="button" class="auth-link">Sign Up</button>';
+                document.querySelectorAll('.auth-link').forEach(b => b.addEventListener('click', arguments.callee));
+            });
+        });
+    });
+
+    authForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        authError.style.display = 'none';
+        authSubmitBtn.disabled = true;
+
+        try {
+            if (isSignUp) {
+                await Auth.register(authEmail.value, authPassword.value);
+            } else {
+                await Auth.login(authEmail.value, authPassword.value);
+            }
+            authModal.classList.add('hidden');
+            appContainer.style.display = '';
+            location.reload();
+        } catch (err) {
+            authError.textContent = err.message;
+            authError.style.display = 'block';
+        } finally {
+            authSubmitBtn.disabled = false;
+        }
+    });
+});
+
 document.addEventListener('DOMContentLoaded', () => {
     // --- State ---
     const currentDate = new Date();
@@ -1426,7 +1572,10 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 const res = await fetch("/api/coach", {
                     method: "POST",
-                    headers: { "Content-Type": "application/json" },
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${Auth.getToken()}`
+                    },
                     body: JSON.stringify({ streaks: appData.streaks })
                 });
                 const data = await res.json();
@@ -1621,7 +1770,10 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const res = await fetch("/api/chat", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${Auth.getToken()}`
+                },
                 body: JSON.stringify({ messages: conversationHistory, streakData: appData.streaks })
             });
             const data = await res.json();

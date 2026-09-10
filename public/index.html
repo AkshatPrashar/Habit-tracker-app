@@ -17,6 +17,29 @@
 </head>
 
 <body>
+    <!-- Auth Modal -->
+    <div id="authModal" class="auth-modal" style="display: flex;">
+        <div class="auth-modal-bg"></div>
+        <div class="auth-modal-content">
+            <h2>Sign up below to unlock the full potential of Streakies.</h2>
+            <p class="auth-subtitle">By continuing, you agree to our terms</p>
+
+            <form id="authForm" class="auth-form">
+                <input type="email" id="authEmail" placeholder="Enter your email" required>
+                <input type="password" id="authPassword" placeholder="Password" required>
+                <button type="submit" id="authSubmitBtn" class="auth-btn-primary">Continue with email</button>
+            </form>
+
+            <p id="authToggleText" class="auth-toggle">
+                Already have an account? <button type="button" id="authToggleBtn" class="auth-link">Sign In</button>
+            </p>
+
+            <div id="authError" style="color: #ff4444; margin-top: 15px; display: none; text-align: center;"></div>
+
+            <button type="button" class="auth-close" onclick="document.getElementById('authModal').classList.add('hidden')">Close</button>
+        </div>
+    </div>
+
     <div class="app-container">
         <!-- Sidebar -->
         <nav class="sidebar">
