@@ -144,6 +144,10 @@ app.post('/api/coach', (req, res) => {
 // Serve static files from public folder
 app.use(express.static(path.join(__dirname, '../public')));
 
+app.get('/verify-email', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/verify-email.html'));
+});
+
 // Error handling middleware (must come before SPA fallback)
 app.use((err, req, res, next) => {
   if (err instanceof ApiError) {
