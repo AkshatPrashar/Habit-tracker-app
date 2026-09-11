@@ -36,7 +36,7 @@ export const register = asyncHandler(async (req, res) => {
     await user.save();
     console.log('📝 Register: User saved');
 
-    const verificationLink = `${process.env.CLIENT_URL || 'http://localhost:3000'}/verify-email?token=${unHashedToken}`;
+    const verificationLink = `${process.env.CLIENT_URL || 'http://localhost:3000'}/api/auth/verify-email?token=${unHashedToken}`;
     console.log('📝 Register: Sending verification email...');
     await sendVerificationEmail(email, verificationLink);
     console.log('📝 Register: Email sent');
@@ -57,7 +57,7 @@ export const register = asyncHandler(async (req, res) => {
 });
 
 export const verifyEmail = asyncHandler(async (req, res) => {
-  const { token } = req.body;
+  const token = req.body.token || req.query.token;
 
   if (!token) {
     throw new ApiError(400, 'Verification token is required');
