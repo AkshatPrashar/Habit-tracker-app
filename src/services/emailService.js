@@ -49,7 +49,7 @@ export const sendVerificationEmail = async (email, verificationLink) => {
   });
 
   const mailOptions = {
-    from: 'noreply@streakies.com',
+    from: process.env.MAILTRAP_FROM_EMAIL,
     to: email,
     subject: 'Email Verification - Streakies',
     html: emailBody,
