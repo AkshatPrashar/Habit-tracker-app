@@ -141,12 +141,20 @@ app.post('/api/coach', (req, res) => {
   res.json({ message });
 });
 
-// Serve static files from public folder
-app.use(express.static(path.join(__dirname, '../public')));
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/login.html'));
+});
+
+app.get('/login', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/login.html'));
+});
 
 app.get('/verify-email', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/verify-email.html'));
 });
+
+// Serve static files from public folder
+app.use(express.static(path.join(__dirname, '../public')));
 
 // Error handling middleware (must come before SPA fallback)
 app.use((err, req, res, next) => {
