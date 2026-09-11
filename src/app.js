@@ -174,9 +174,9 @@ app.use((err, req, res, next) => {
   });
 });
 
-// SPA fallback - serve index.html for all unmatched routes
+// SPA fallback - serve login.html for all unmatched routes
 app.use((req, res) => {
-  res.sendFile(path.join(__dirname, '../public/index.html'));
+  res.sendFile(path.join(__dirname, '../public/login.html'));
 });
 
 export default app;
