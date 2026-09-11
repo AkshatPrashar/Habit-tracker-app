@@ -1,4 +1,4 @@
-module.exports = async (req, res) => {
+export default async function handler(req, res) {
   if (req.method === 'OPTIONS') {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -104,7 +104,7 @@ module.exports = async (req, res) => {
     res.statusCode = 500;
     res.end(JSON.stringify({ reply: "Something went wrong. Please try again!" }));
   }
-};
+}
 
 function formatStreakAnalysis(streakData) {
   if (!streakData || streakData.length === 0) {
