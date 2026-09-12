@@ -98,8 +98,8 @@ document.addEventListener('DOMContentLoaded', () => {
         authModal.classList.add('hidden');
         appContainer.style.display = '';
     } else {
-        authModal.style.display = 'flex';
-        appContainer.style.display = 'none';
+        window.location.href = '/login';
+        return;
     }
 
     authToggleBtn.addEventListener('click', (e) => {

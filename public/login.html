@@ -247,6 +247,10 @@
   }
   tick();
 
+  if (localStorage.getItem('streakies_access_token')) {
+    window.location.href = '/app';
+  }
+
   // Form switching
   const loginForm = document.getElementById('loginForm');
   const signupForm = document.getElementById('signupForm');
@@ -308,11 +312,12 @@
       const data = await res.json();
 
       if (res.ok) {
-        localStorage.setItem('accessToken', data.data.accessToken);
-        localStorage.setItem('refreshToken', data.data.refreshToken);
+        localStorage.setItem('streakies_access_token', data.data.accessToken);
+        localStorage.setItem('streakies_refresh_token', data.data.refreshToken);
+        localStorage.setItem('streakies_email', email);
         statusEl.className = 'status success';
         statusEl.textContent = 'Login successful! Redirecting...';
-        setTimeout(() => { window.location.href = '/dashboard'; }, 600);
+        setTimeout(() => { window.location.href = '/app'; }, 600);
       } else {
         statusEl.className = 'status error';
         statusEl.textContent = data.message || 'Invalid email or password.';
