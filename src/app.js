@@ -13,6 +13,19 @@ dotenv.config();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 
+app.use((req, res, next) => {
+  if (req.headers['x-debug-route'] === '1' && req.headers['x-debug-stage'] === 'raw') {
+    return res.json({
+      debug: true,
+      stage: 'raw-entry',
+      method: req.method,
+      url: req.url,
+      originalUrl: req.originalUrl,
+    });
+  }
+  next();
+});
+
 app.use(express.json());
 app.use(cors());
 app.use(cookieParser());
@@ -184,6 +197,15 @@ app.use((err, req, res, next) => {
 
 // SPA fallback - serve login.html for all unmatched routes
 app.use((req, res) => {
+  if (req.headers['x-debug-route'] === '1') {
+    return res.json({
+      debug: true,
+      method: req.method,
+      url: req.url,
+      originalUrl: req.originalUrl,
+      path: req.path,
+    });
+  }
   res.sendFile(path.join(__dirname, '../public/login.html'));
 });
 
