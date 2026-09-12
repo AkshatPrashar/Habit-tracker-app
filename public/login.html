@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Streakies</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    background: #000;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    overflow: hidden;
+  }
+
+  #bg {
+    position: fixed;
+    inset: 0;
+    display: block;
+    background: #000;
+  }
+
+  .card {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 24px;
+    text-align: center;
+  }
+
+  .panel {
+    background: rgba(20, 20, 20, 0.75);
+    border: 1px solid rgba(188, 237, 26, 0.25);
+    border-radius: 16px;
+    padding: 44px 36px;
+    max-width: 420px;
+    width: 100%;
+    backdrop-filter: blur(6px);
+    box-shadow: 0 0 40px rgba(188, 237, 26, 0.08);
+  }
+
+  h1 {
+    color: #bced1a;
+    font-size: 28px;
+    font-weight: 800;
+    margin-bottom: 6px;
+  }
+
+  p.subtitle {
+    color: #a3a3a3;
+    font-size: 14px;
+    line-height: 1.5;
+    margin-bottom: 26px;
+  }
+
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    text-align: left;
+  }
+
+  .hidden { display: none; }
+
+  label {
+    display: block;
+    color: #a3a3a3;
+    font-size: 12px;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  input {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(188, 237, 26, 0.2);
+    border-radius: 8px;
+    padding: 12px 14px;
+    color: #f2f2f2;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  input:focus {
+    border-color: #bced1a;
+  }
+
+  input::placeholder {
+    color: #555;
+  }
+
+  button[type="submit"] {
+    margin-top: 8px;
+    width: 100%;
+    background: #bced1a;
+    color: #0a0a0a;
+    border: none;
+    border-radius: 8px;
+    padding: 13px 14px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+
+  button[type="submit"]:hover {
+    opacity: 0.9;
+  }
+
+  button[type="submit"]:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .switch {
+    margin-top: 20px;
+    font-size: 13px;
+    color: #a3a3a3;
+  }
+
+  .switch a {
+    color: #bced1a;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .switch a:hover {
+    text-decoration: underline;
+  }
+
+  .status {
+    margin-top: 16px;
+    font-size: 13px;
+    min-height: 18px;
+  }
+
+  .status.error { color: #ff5a5a; }
+  .status.success { color: #bced1a; }
+</style>
+</head>
+<body>
+  <canvas id="bg"></canvas>
+
+  <div class="card">
+    <div class="panel">
+      <h1>Streakies</h1>
+      <p class="subtitle" id="subtitle">Log in to continue tracking your streaks.</p>
+
+      <form id="loginForm">
+        <div>
+          <label for="loginEmail">Email</label>
+          <input type="email" id="loginEmail" placeholder="you@example.com" required />
+        </div>
+        <div>
+          <label for="loginPassword">Password</label>
+          <input type="password" id="loginPassword" placeholder="••••••••" required />
+        </div>
+        <button type="submit" id="loginBtn">Log In</button>
+      </form>
+
+      <form id="signupForm" class="hidden">
+        <div>
+          <label for="signupFullName">Full Name</label>
+          <input type="text" id="signupFullName" placeholder="Jane Doe" />
+        </div>
+        <div>
+          <label for="signupUsername">Username</label>
+          <input type="text" id="signupUsername" placeholder="janedoe" required />
+        </div>
+        <div>
+          <label for="signupEmail">Email</label>
+          <input type="email" id="signupEmail" placeholder="you@example.com" required />
+        </div>
+        <div>
+          <label for="signupPassword">Password</label>
+          <input type="password" id="signupPassword" placeholder="••••••••" required />
+        </div>
+        <button type="submit" id="signupBtn">Sign Up</button>
+      </form>
+
+      <div class="switch">
+        <span id="loginSwitch">Don't have an account? <a id="showSignup">Sign Up</a></span>
+        <span id="signupSwitch" class="hidden">Already have an account? <a id="showLogin">Log In</a></span>
+      </div>
+
+      <div id="status" class="status"></div>
+    </div>
+  </div>
+
+<script>
+  // Moving dot background
+  const canvas = document.getElementById('bg');
+  const ctx = canvas.getContext('2d');
+  let dots = [];
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  const DOT_COLOR = '#bced1a';
+  const DOT_COUNT = Math.floor((window.innerWidth * window.innerHeight) / 9000);
+
+  function makeDot() {
+    return {
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      r: Math.random() * 1.6 + 0.6,
+      vx: (Math.random() - 0.5) * 0.3,
+      vy: (Math.random() - 0.5) * 0.3,
+      alpha: Math.random() * 0.5 + 0.3,
+    };
+  }
+
+  for (let i = 0; i < DOT_COUNT; i++) dots.push(makeDot());
+
+  function tick() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    for (const d of dots) {
+      d.x += d.vx;
+      d.y += d.vy;
+
+      if (d.x < 0) d.x = canvas.width;
+      if (d.x > canvas.width) d.x = 0;
+      if (d.y < 0) d.y = canvas.height;
+      if (d.y > canvas.height) d.y = 0;
+
+      ctx.beginPath();
+      ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+      ctx.fillStyle = DOT_COLOR;
+      ctx.globalAlpha = d.alpha;
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    requestAnimationFrame(tick);
+  }
+  tick();
+
+  // Form switching
+  const loginForm = document.getElementById('loginForm');
+  const signupForm = document.getElementById('signupForm');
+  const loginSwitch = document.getElementById('loginSwitch');
+  const signupSwitch = document.getElementById('signupSwitch');
+  const subtitle = document.getElementById('subtitle');
+  const statusEl = document.getElementById('status');
+
+  function showLogin() {
+    loginForm.classList.remove('hidden');
+    signupForm.classList.add('hidden');
+    loginSwitch.classList.remove('hidden');
+    signupSwitch.classList.add('hidden');
+    subtitle.textContent = 'Log in to continue tracking your streaks.';
+    statusEl.textContent = '';
+    statusEl.className = 'status';
+    history.replaceState(null, '', '/login');
+  }
+
+  function showSignup() {
+    loginForm.classList.add('hidden');
+    signupForm.classList.remove('hidden');
+    loginSwitch.classList.add('hidden');
+    signupSwitch.classList.remove('hidden');
+    subtitle.textContent = 'Create an account to start building streaks.';
+    statusEl.textContent = '';
+    statusEl.className = 'status';
+    history.replaceState(null, '', '/signup');
+  }
+
+  document.getElementById('showSignup').addEventListener('click', showSignup);
+  document.getElementById('showLogin').addEventListener('click', showLogin);
+
+  if (window.location.pathname === '/signup') {
+    showSignup();
+  } else {
+    showLogin();
+  }
+
+  // Login submit
+  loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    const btn = document.getElementById('loginBtn');
+
+    btn.disabled = true;
+    btn.textContent = 'Logging in...';
+    statusEl.className = 'status';
+    statusEl.textContent = '';
+
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        localStorage.setItem('accessToken', data.data.accessToken);
+        localStorage.setItem('refreshToken', data.data.refreshToken);
+        statusEl.className = 'status success';
+        statusEl.textContent = 'Login successful! Redirecting...';
+        setTimeout(() => { window.location.href = '/dashboard'; }, 600);
+      } else {
+        statusEl.className = 'status error';
+        statusEl.textContent = data.message || 'Invalid email or password.';
+      }
+    } catch (err) {
+      statusEl.className = 'status error';
+      statusEl.textContent = 'Could not reach the server. Please try again later.';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Log In';
+    }
+  });
+
+  // Signup submit
+  signupForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const fullName = document.getElementById('signupFullName').value.trim();
+    const username = document.getElementById('signupUsername').value.trim();
+    const email = document.getElementById('signupEmail').value.trim();
+    const password = document.getElementById('signupPassword').value;
+    const btn = document.getElementById('signupBtn');
+
+    btn.disabled = true;
+    btn.textContent = 'Signing up...';
+    statusEl.className = 'status';
+    statusEl.textContent = '';
+
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fullName, username, email, password }),
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        statusEl.className = 'status success';
+        statusEl.textContent = 'Account created! Check your email for a verification link, then log in.';
+        signupForm.reset();
+        setTimeout(showLogin, 2000);
+      } else {
+        statusEl.className = 'status error';
+        statusEl.textContent = data.message || 'Could not create account.';
+      }
+    } catch (err) {
+      statusEl.className = 'status error';
+      statusEl.textContent = 'Could not reach the server. Please try again later.';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Sign Up';
+    }
+  });
+</script>
+</body>
+</html>

@@ -23,6 +23,8 @@ const getTransporter = () => {
     transporter = nodemailer.createTransport({
       host: process.env.MAILTRAP_SMTP_HOST,
       port: Number(process.env.MAILTRAP_SMTP_PORT),
+      secure: false,
+      requireTLS: true,
       auth: {
         user: process.env.MAILTRAP_SMTP_USER,
         pass: process.env.MAILTRAP_SMTP_PASS,
@@ -49,7 +51,7 @@ export const sendVerificationEmail = async (email, verificationLink) => {
   });
 
   const mailOptions = {
-    from: 'noreply@streakies.com',
+    from: process.env.MAILTRAP_FROM_EMAIL,
     to: email,
     subject: 'Email Verification - Streakies',
     html: emailBody,
