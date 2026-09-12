@@ -23,6 +23,8 @@ const getTransporter = () => {
     transporter = nodemailer.createTransport({
       host: process.env.MAILTRAP_SMTP_HOST,
       port: Number(process.env.MAILTRAP_SMTP_PORT),
+      secure: false,
+      requireTLS: true,
       auth: {
         user: process.env.MAILTRAP_SMTP_USER,
         pass: process.env.MAILTRAP_SMTP_PASS,
