@@ -10,22 +10,39 @@ import { sendVerificationEmail, sendLoginNotificationEmail, sendLogoutNotificati
 export const register = asyncHandler(async (req, res) => {
   try {
     console.log('📝 Register: Starting registration...');
-    const { email, password, username, fullName } = req.body;
+    const { email, password, fullName } = req.body;
+    let { username } = req.body;
     console.log('📝 Register: Got user data');
 
-    if (!email || !password || !username) {
-      throw new ApiError(400, 'Email, password, and username are required');
+    if (!email || !password) {
+      throw new ApiError(400, 'Email and password are required');
     }
 
-    const existingUser = await User.findOne({ $or: [{ email }, { username }] });
-    if (existingUser) {
+    const existingEmail = await User.findOne({ email: email.toLowerCase() });
+    if (existingEmail) {
       throw new ApiError(409, 'Email or username already exists');
+    }
+
+    if (!username) {
+      const base = email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '') || 'user';
+      username = base;
+      let suffix = 0;
+      while (await User.findOne({ username })) {
+        suffix += 1;
+        username = `${base}${suffix}`;
+      }
+    } else {
+      username = username.toLowerCase();
+      const existingUsername = await User.findOne({ username });
+      if (existingUsername) {
+        throw new ApiError(409, 'Email or username already exists');
+      }
     }
 
     const user = new User({
       email: email.toLowerCase(),
       password,
-      username: username.toLowerCase(),
+      username,
       fullName: fullName || username,
     });
 

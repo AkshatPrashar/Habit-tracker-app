@@ -145,19 +145,19 @@ app.post('/api/coach', (req, res) => {
 });
 
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/login.html'));
+  res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 
 app.get('/login', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/login.html'));
+  res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 
 app.get('/signup', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/login.html'));
+  res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 
 app.get('/dashboard', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/dashboard.html'));
+  res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 
 app.get('/verify-email', (req, res) => {
@@ -185,9 +185,9 @@ app.use((err, req, res, next) => {
   });
 });
 
-// SPA fallback - serve login.html for all unmatched routes
+// SPA fallback - serve index.html for all unmatched routes
 app.use((req, res) => {
-  res.sendFile(path.join(__dirname, '../public/login.html'));
+  res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 
 export default app;
