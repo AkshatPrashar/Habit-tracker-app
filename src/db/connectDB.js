@@ -1,5 +1,7 @@
 import mongoose from "mongoose";
 
+mongoose.set('bufferTimeoutMS', 20000);
+
 const connectDB = async () => {
   try {
     console.log("🔄 Connecting to MongoDB...");
