@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-mongoose.set('bufferTimeoutMS', 20000);
+mongoose.set('bufferTimeoutMS', 30000);
 
 const connectDB = async () => {
   try {
@@ -14,10 +14,10 @@ const connectDB = async () => {
       w: "majority",
       authSource: "admin",
       maxPoolSize: 10,
-      minPoolSize: 5,
+      minPoolSize: 1,
       socketTimeoutMS: 45000,
-      serverSelectionTimeoutMS: 15000,
-      connectTimeoutMS: 15000,
+      serverSelectionTimeoutMS: 25000,
+      connectTimeoutMS: 25000,
     });
 
     console.log("✅ MongoDB connected!");
