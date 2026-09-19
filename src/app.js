@@ -14,11 +14,28 @@ dotenv.config();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 
-connectDB().catch((err) => console.error('MongoDB connection error:', err));
+let dbConnectionError = null;
+const dbConnectionPromise = connectDB().catch((err) => {
+  console.error('MongoDB connection error:', err);
+  dbConnectionError = err;
+  return null;
+});
 
 app.use(express.json());
 app.use(cors());
 app.use(cookieParser());
+
+app.use('/api', async (req, res, next) => {
+  const conn = await dbConnectionPromise;
+  if (!conn) {
+    return res.status(503).json({
+      statusCode: 503,
+      message: `Database connection failed: ${dbConnectionError?.message || 'unknown error'}`,
+      success: false,
+    });
+  }
+  next();
+});
 
 // Auth routes
 app.use('/api/auth', authRoutes);
