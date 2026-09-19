@@ -181,6 +181,10 @@ app.get('/verify-email', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/verify-email.html'));
 });
 
+app.get('/reset-password', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/reset-password.html'));
+});
+
 // Serve static files from public folder
 app.use(express.static(path.join(__dirname, '../public')));
 

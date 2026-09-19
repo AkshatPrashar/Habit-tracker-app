@@ -136,6 +136,19 @@
     text-decoration: underline;
   }
 
+  .forgot-link {
+    display: block;
+    text-align: center;
+    margin-top: 14px;
+    color: #a3a3a3;
+    font-size: 12px;
+    text-decoration: none;
+  }
+
+  .forgot-link:hover {
+    color: #bced1a;
+  }
+
   .status {
     margin-top: 16px;
     font-size: 13px;
@@ -164,6 +177,15 @@
           <input type="password" id="loginPassword" placeholder="••••••••" required />
         </div>
         <button type="submit" id="loginBtn">Log In</button>
+        <a href="#" id="showForgot" class="forgot-link">Forgot password?</a>
+      </form>
+
+      <form id="forgotForm" class="hidden">
+        <div>
+          <label for="forgotEmail">Email</label>
+          <input type="email" id="forgotEmail" placeholder="you@example.com" required />
+        </div>
+        <button type="submit" id="forgotBtn">Send Reset Link</button>
       </form>
 
       <form id="signupForm" class="hidden">
@@ -189,6 +211,7 @@
       <div class="switch">
         <span id="loginSwitch">Don't have an account? <a id="showSignup">Sign Up</a></span>
         <span id="signupSwitch" class="hidden">Already have an account? <a id="showLogin">Log In</a></span>
+        <span id="forgotSwitch" class="hidden">Remembered your password? <a id="showLoginFromForgot">Log In</a></span>
       </div>
 
       <div id="status" class="status"></div>
@@ -254,16 +277,20 @@
   // Form switching
   const loginForm = document.getElementById('loginForm');
   const signupForm = document.getElementById('signupForm');
+  const forgotForm = document.getElementById('forgotForm');
   const loginSwitch = document.getElementById('loginSwitch');
   const signupSwitch = document.getElementById('signupSwitch');
+  const forgotSwitch = document.getElementById('forgotSwitch');
   const subtitle = document.getElementById('subtitle');
   const statusEl = document.getElementById('status');
 
   function showLogin() {
     loginForm.classList.remove('hidden');
     signupForm.classList.add('hidden');
+    forgotForm.classList.add('hidden');
     loginSwitch.classList.remove('hidden');
     signupSwitch.classList.add('hidden');
+    forgotSwitch.classList.add('hidden');
     subtitle.textContent = 'Log in to continue tracking your streaks.';
     statusEl.textContent = '';
     statusEl.className = 'status';
@@ -273,16 +300,35 @@
   function showSignup() {
     loginForm.classList.add('hidden');
     signupForm.classList.remove('hidden');
+    forgotForm.classList.add('hidden');
     loginSwitch.classList.add('hidden');
     signupSwitch.classList.remove('hidden');
+    forgotSwitch.classList.add('hidden');
     subtitle.textContent = 'Create an account to start building streaks.';
     statusEl.textContent = '';
     statusEl.className = 'status';
     history.replaceState(null, '', '/signup');
   }
 
+  function showForgot() {
+    loginForm.classList.add('hidden');
+    signupForm.classList.add('hidden');
+    forgotForm.classList.remove('hidden');
+    loginSwitch.classList.add('hidden');
+    signupSwitch.classList.add('hidden');
+    forgotSwitch.classList.remove('hidden');
+    subtitle.textContent = "Enter your email and we'll send you a reset link.";
+    statusEl.textContent = '';
+    statusEl.className = 'status';
+  }
+
   document.getElementById('showSignup').addEventListener('click', showSignup);
   document.getElementById('showLogin').addEventListener('click', showLogin);
+  document.getElementById('showForgot').addEventListener('click', (e) => {
+    e.preventDefault();
+    showForgot();
+  });
+  document.getElementById('showLoginFromForgot').addEventListener('click', showLogin);
 
   if (window.location.pathname === '/signup') {
     showSignup();
@@ -369,6 +415,43 @@
     } finally {
       btn.disabled = false;
       btn.textContent = 'Sign Up';
+    }
+  });
+
+  // Forgot password submit
+  forgotForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const email = document.getElementById('forgotEmail').value.trim();
+    const btn = document.getElementById('forgotBtn');
+
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
+    statusEl.className = 'status';
+    statusEl.textContent = '';
+
+    try {
+      const res = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        statusEl.className = 'status success';
+        statusEl.textContent = 'Reset link sent! Check your email.';
+        forgotForm.reset();
+      } else {
+        statusEl.className = 'status error';
+        statusEl.textContent = data.message || 'Could not send reset link.';
+      }
+    } catch (err) {
+      statusEl.className = 'status error';
+      statusEl.textContent = 'Could not reach the server. Please try again later.';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Send Reset Link';
     }
   });
 </script>
