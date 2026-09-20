@@ -25,7 +25,7 @@ app.use(express.json());
 app.use(cors());
 app.use(cookieParser());
 
-app.use('/api', async (req, res, next) => {
+app.use('/api/auth', async (req, res, next) => {
   const conn = await dbConnectionPromise;
   if (!conn) {
     return res.status(503).json({
