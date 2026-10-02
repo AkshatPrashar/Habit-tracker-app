@@ -166,6 +166,10 @@
       .then(({ ok, data }) => {
         if (ok) {
           setState('success', 'Email verified!', 'Your email has been verified. You can now log in to your account.');
+          localStorage.setItem('streakies_access_token', data.data.accessToken);
+          localStorage.setItem('streakies_refresh_token', data.data.refreshToken);
+          localStorage.setItem('streakies_email', data.data.user.email);
+          setTimeout(() => { window.location.href = '/app'; }, 1200);
         } else {
           setState('error', 'Verification failed', data.message || 'This verification link is invalid or has expired.');
         }

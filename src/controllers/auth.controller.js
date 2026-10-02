@@ -7,6 +7,18 @@ import { ApiError } from '../utils/ApiError.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { sendVerificationEmail, sendLoginNotificationEmail, sendLogoutNotificationEmail, sendForgotPasswordEmail } from '../services/emailService.js';
 
+const issueAuthTokens = async (user) => {
+  const accessToken = user.generateAccessToken();
+  const refreshToken = user.generateRefreshToken();
+
+  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+  await RefreshToken.create({ token: refreshToken, userId: user._id, expiresAt });
+
+  user.refreshToken = refreshToken;
+
+  return { accessToken, refreshToken };
+};
+
 export const register = asyncHandler(async (req, res) => {
   try {
     console.log('📝 Register: Starting registration...');
@@ -97,7 +109,12 @@ export const verifyEmail = asyncHandler(async (req, res) => {
 
   await user.save();
 
-  res.status(200).json(new ApiResponse(200, null, 'Email verified successfully'));
+  const { accessToken, refreshToken } = await issueAuthTokens(user);
+  await user.save();
+
+  res.status(200).json(
+    new ApiResponse(200, { accessToken, refreshToken, user: { _id: user._id, email: user.email, username: user.username } }, 'Email verified successfully')
+  );
 });
 
 export const login = asyncHandler(async (req, res) => {
@@ -121,13 +138,7 @@ export const login = asyncHandler(async (req, res) => {
     throw new ApiError(403, 'Please verify your email before logging in');
   }
 
-  const accessToken = user.generateAccessToken();
-  const refreshToken = user.generateRefreshToken();
-
-  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-  await RefreshToken.create({ token: refreshToken, userId: user._id, expiresAt });
-
-  user.refreshToken = refreshToken;
+  const { accessToken, refreshToken } = await issueAuthTokens(user);
   await user.save();
 
   await sendLoginNotificationEmail(user.email);
