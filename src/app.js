@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import authRoutes from './routes/auth.routes.js';
+import habitRoutes from './routes/habit.routes.js';
 import { ApiResponse } from './utils/ApiResponse.js';
 import { ApiError } from './utils/ApiError.js';
 import connectDB from './db/connectDB.js';
@@ -46,6 +47,22 @@ app.use('/api/auth', async (req, res, next) => {
 
 // Auth routes
 app.use('/api/auth', authRoutes);
+
+app.use('/api/habits', async (req, res, next) => {
+  try {
+    await getDbConnection();
+    next();
+  } catch (err) {
+    return res.status(503).json({
+      statusCode: 503,
+      message: `Database connection failed: ${err?.message || 'unknown error'}`,
+      success: false,
+    });
+  }
+});
+
+// Habit routes
+app.use('/api/habits', habitRoutes);
 
 // Chatbot logic functions
 function formatStreakAnalysis(streakData) {
