@@ -993,6 +993,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await apiFetch('/api/habits', { method: 'GET' });
             appData.streaks = data.habits || [];
             appData.calendarData = data.calendarData || {};
+
+            appData.streaks.forEach(streak => {
+                if (!streak.history) streak.history = {};
+                if (!streak.questionData) streak.questionData = {};
+            });
         } catch (err) {
             console.error('Failed to load habits from server:', err);
             return;
@@ -1184,6 +1189,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const getStreakStats = (streak) => {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
+        const history = streak.history || {};
+        const questionData = streak.questionData || {};
 
         let currentStreak = 0;
         let longestStreak = 0;
@@ -1198,7 +1205,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let checkDate = new Date(start);
         while (checkDate <= today) {
             const dateStr = formatStreakDate(checkDate);
-            if (streak.history[dateStr] > 0) {
+            if (history[dateStr] > 0) {
                 activeDays++;
                 tempStreak++;
                 longestStreak = Math.max(longestStreak, tempStreak);
