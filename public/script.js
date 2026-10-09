@@ -80,6 +80,31 @@ const Auth = (() => {
     return { getToken, getAccessToken, getRefreshToken, getEmail, isLoggedIn, login, register, logout, refreshAccessToken };
 })();
 
+const deepClone = (obj) =>
+    typeof structuredClone === 'function'
+        ? structuredClone(obj)
+        : JSON.parse(JSON.stringify(obj));
+
+const apiFetch = async (path, options = {}) => {
+    const token = Auth.getAccessToken();
+    const headers = {
+        'Content-Type': 'application/json',
+        ...(options.headers || {})
+    };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    const res = await fetch(path, { ...options, headers });
+    const body = await res.json().catch(() => null);
+
+    if (res.status === 401) {
+        throw new Error((body && body.message) || 'Unauthorized');
+    }
+    if (!res.ok) {
+        throw new Error((body && body.message) || `Request failed with status ${res.status}`);
+    }
+    return body ? body.data : undefined;
+};
+
 // Initialize auth modal
 document.addEventListener('DOMContentLoaded', () => {
     const authModal = document.getElementById('authModal');
@@ -206,49 +231,6 @@ document.addEventListener('DOMContentLoaded', () => {
         notes: "",
         calendarData: {}
     };
-
-    const loadData = () => {
-        try {
-            const data = localStorage.getItem('habitTrackerData');
-            if (data) {
-                const parsed = JSON.parse(data);
-                appData = { ...appData, ...parsed };
-            } else {
-                // Migrate old dashboardData if exists
-                const oldData = localStorage.getItem('dashboardData');
-                if (oldData) {
-                    const parsedOld = JSON.parse(oldData);
-                    appData.streaks = parsedOld.streaks || [];
-                    Object.keys(parsedOld).forEach(key => {
-                        if (key !== 'streaks' && key.match(/^\d{4}-\d{2}-\d{2}$/)) {
-                            appData.calendarData[key] = parsedOld[key];
-                        }
-                    });
-                    saveData();
-                }
-            }
-        } catch (e) {
-            console.error("Corrupted localStorage data, starting fresh", e);
-        }
-
-        // Initialize streak data structures
-        if (appData.streaks) {
-            appData.streaks.forEach(streak => {
-                if (!streak.history) streak.history = {};
-                if (!streak.questionData) streak.questionData = {};
-            });
-        }
-    };
-
-    const saveData = () => {
-        try {
-            localStorage.setItem('habitTrackerData', JSON.stringify(appData));
-        } catch (e) {
-            console.error("Failed to save data", e);
-        }
-    };
-
-    loadData();
 
 
     const months = [
@@ -389,9 +371,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const toggleTimeBlockDone = (id, isDone) => {
         if (!currentSelectedDateStr) return;
-        const data = getDateData(currentSelectedDateStr);
+        const dateStr = currentSelectedDateStr;
+        const data = getDateData(dateStr);
         const block = data.timeBlocks.find(b => b.id === id);
         if (block) {
+            const snapshot = deepClone(data);
+
             block.completed = isDone;
             if (isDone) {
                 const [sH, sM] = block.startTime.split(':').map(Number);
@@ -400,8 +385,19 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 block.plannedDuration = 0;
             }
-            saveData();
             renderTimeline(data);
+
+            apiFetch(`/api/habits/calendar/${dateStr}`, {
+                method: 'PUT',
+                body: JSON.stringify({ tasks: data.tasks, notes: data.notes, timeBlocks: data.timeBlocks })
+            }).then(serverResponse => {
+                appData.calendarData[dateStr] = { tasks: serverResponse.tasks, notes: serverResponse.notes, timeBlocks: serverResponse.timeBlocks };
+                renderTimeline(appData.calendarData[dateStr]);
+            }).catch(err => {
+                appData.calendarData[dateStr] = snapshot;
+                renderTimeline(appData.calendarData[dateStr]);
+                console.error('Failed to save time block:', err);
+            });
         }
     };
 
@@ -520,8 +516,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const toggleTask = (index, isDone) => {
         if (!currentSelectedDateStr) return;
-        getDateData(currentSelectedDateStr).tasks[index].done = isDone;
-        saveData();
+        const dateStr = currentSelectedDateStr;
+        const data = getDateData(dateStr);
+        const snapshot = deepClone(data);
+
+        data.tasks[index].done = isDone;
+
+        apiFetch(`/api/habits/calendar/${dateStr}`, {
+            method: 'PUT',
+            body: JSON.stringify({ tasks: data.tasks, notes: data.notes, timeBlocks: data.timeBlocks })
+        }).then(serverResponse => {
+            appData.calendarData[dateStr] = { tasks: serverResponse.tasks, notes: serverResponse.notes, timeBlocks: serverResponse.timeBlocks };
+            refreshDetailsPanel();
+        }).catch(err => {
+            appData.calendarData[dateStr] = snapshot;
+            refreshDetailsPanel();
+            console.error('Failed to save task:', err);
+        });
     };
 
     // 4. Events
@@ -556,9 +567,25 @@ document.addEventListener('DOMContentLoaded', () => {
             checkbox.type = 'checkbox';
             checkbox.checked = task.done;
             checkbox.addEventListener('change', (e) => {
-                getDateData(dayActionsSelectedDateStr).tasks[index].done = e.target.checked;
-                saveData();
+                const dateStr = dayActionsSelectedDateStr;
+                const dayData = getDateData(dateStr);
+                const snapshot = deepClone(dayData);
+
+                dayData.tasks[index].done = e.target.checked;
                 refreshDetailsPanel();
+
+                apiFetch(`/api/habits/calendar/${dateStr}`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ tasks: dayData.tasks, notes: dayData.notes, timeBlocks: dayData.timeBlocks })
+                }).then(serverResponse => {
+                    appData.calendarData[dateStr] = { tasks: serverResponse.tasks, notes: serverResponse.notes, timeBlocks: serverResponse.timeBlocks };
+                    refreshDetailsPanel();
+                }).catch(err => {
+                    appData.calendarData[dateStr] = snapshot;
+                    refreshDayActionsCards();
+                    refreshDetailsPanel();
+                    console.error('Failed to save task:', err);
+                });
             });
             const checkmark = document.createElement('div');
             checkmark.classList.add('checkmark');
@@ -608,7 +635,10 @@ document.addEventListener('DOMContentLoaded', () => {
             checkbox.type = 'checkbox';
             checkbox.checked = block.completed;
             checkbox.addEventListener('change', (e) => {
-                const b = getDateData(dayActionsSelectedDateStr).timeBlocks.find(x => x.id === block.id);
+                const dateStr = dayActionsSelectedDateStr;
+                const snapshot = deepClone(data);
+
+                const b = data.timeBlocks.find(x => x.id === block.id);
                 if (b) {
                     b.completed = e.target.checked;
                     if (e.target.checked) {
@@ -619,9 +649,22 @@ document.addEventListener('DOMContentLoaded', () => {
                         b.plannedDuration = 0;
                     }
                 }
-                saveData();
                 renderDayActionsTimeline(data);
                 refreshDetailsPanel();
+
+                apiFetch(`/api/habits/calendar/${dateStr}`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ tasks: data.tasks, notes: data.notes, timeBlocks: data.timeBlocks })
+                }).then(serverResponse => {
+                    appData.calendarData[dateStr] = { tasks: serverResponse.tasks, notes: serverResponse.notes, timeBlocks: serverResponse.timeBlocks };
+                    renderDayActionsTimeline(appData.calendarData[dateStr]);
+                    refreshDetailsPanel();
+                }).catch(err => {
+                    appData.calendarData[dateStr] = snapshot;
+                    renderDayActionsTimeline(appData.calendarData[dateStr]);
+                    refreshDetailsPanel();
+                    console.error('Failed to save time block:', err);
+                });
             });
             const checkmark = document.createElement('div');
             checkmark.classList.add('checkmark');
@@ -637,12 +680,28 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!dayActionsSelectedDateStr) return;
             const text = dayActionsTaskInput.value;
             if (text && text.trim()) {
-                const data = getDateData(dayActionsSelectedDateStr);
+                const dateStr = dayActionsSelectedDateStr;
+                const data = getDateData(dateStr);
+                const snapshot = deepClone(data);
+
                 data.tasks.push({ text: text.trim(), done: false });
-                saveData();
                 dayActionsTaskInput.value = '';
                 refreshDayActionsCards();
                 refreshDetailsPanel();
+
+                apiFetch(`/api/habits/calendar/${dateStr}`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ tasks: data.tasks, notes: data.notes, timeBlocks: data.timeBlocks })
+                }).then(serverResponse => {
+                    appData.calendarData[dateStr] = { tasks: serverResponse.tasks, notes: serverResponse.notes, timeBlocks: serverResponse.timeBlocks };
+                    refreshDayActionsCards();
+                    refreshDetailsPanel();
+                }).catch(err => {
+                    appData.calendarData[dateStr] = snapshot;
+                    refreshDayActionsCards();
+                    refreshDetailsPanel();
+                    console.error('Failed to add task:', err);
+                });
             }
         });
     }
@@ -663,7 +722,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             if (!dayActionsSelectedDateStr) return;
 
-            const data = getDateData(dayActionsSelectedDateStr);
+            const dateStr = dayActionsSelectedDateStr;
+            const data = getDateData(dateStr);
             const hasConflict = data.timeBlocks.some(block => {
                 return (start < block.endTime && end > block.startTime);
             });
@@ -671,6 +731,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert("⚠️ This overlaps with another time block!");
                 return;
             }
+
+            const snapshot = deepClone(data);
 
             data.timeBlocks.push({
                 id: Date.now().toString(),
@@ -681,14 +743,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 plannedDuration: 0
             });
             data.timeBlocks.sort((a, b) => a.startTime.localeCompare(b.startTime));
-            saveData();
-            
+
             dayActionsBlockTitleInput.value = '';
             dayActionsBlockStartInput.value = '';
             dayActionsBlockEndInput.value = '';
-            
+
             refreshDayActionsCards();
             refreshDetailsPanel();
+
+            apiFetch(`/api/habits/calendar/${dateStr}`, {
+                method: 'PUT',
+                body: JSON.stringify({ tasks: data.tasks, notes: data.notes, timeBlocks: data.timeBlocks })
+            }).then(serverResponse => {
+                appData.calendarData[dateStr] = { tasks: serverResponse.tasks, notes: serverResponse.notes, timeBlocks: serverResponse.timeBlocks };
+                refreshDayActionsCards();
+                refreshDetailsPanel();
+            }).catch(err => {
+                appData.calendarData[dateStr] = snapshot;
+                refreshDayActionsCards();
+                refreshDetailsPanel();
+                console.error('Failed to add time block:', err);
+            });
         });
     }
 
@@ -726,7 +801,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!currentSelectedDateStr) return;
 
-            const data = getDateData(currentSelectedDateStr);
+            const dateStr = currentSelectedDateStr;
+            const data = getDateData(dateStr);
 
             const hasConflict = data.timeBlocks.some(block => {
                 return (start < block.endTime && end > block.startTime);
@@ -736,6 +812,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert("⚠️ This overlaps with another time block!");
                 return;
             }
+
+            const snapshot = deepClone(data);
 
             data.timeBlocks.push({
                 id: Date.now().toString(),
@@ -748,23 +826,50 @@ document.addEventListener('DOMContentLoaded', () => {
 
             data.timeBlocks.sort((a, b) => a.startTime.localeCompare(b.startTime));
 
-            saveData();
             planDayModal.style.display = 'none';
 
             detailsPanel.classList.add('open');
             if (window.innerWidth <= 768 && panelOverlay) panelOverlay.classList.add('show');
             refreshDetailsPanel();
+
+            apiFetch(`/api/habits/calendar/${dateStr}`, {
+                method: 'PUT',
+                body: JSON.stringify({ tasks: data.tasks, notes: data.notes, timeBlocks: data.timeBlocks })
+            }).then(serverResponse => {
+                appData.calendarData[dateStr] = { tasks: serverResponse.tasks, notes: serverResponse.notes, timeBlocks: serverResponse.timeBlocks };
+                refreshDetailsPanel();
+            }).catch(err => {
+                appData.calendarData[dateStr] = snapshot;
+                refreshDetailsPanel();
+                console.error('Failed to add time block:', err);
+            });
         });
     }
 
+    let notesDebounceTimer = null;
+
     if (dayActionsNotesInput) {
         dayActionsNotesInput.addEventListener('input', (e) => {
-            if (dayActionsSelectedDateStr) {
-                const data = getDateData(dayActionsSelectedDateStr);
-                data.notes = e.target.value;
-                saveData();
-                refreshDetailsPanel(); // Keep details panel synced if needed
-            }
+            if (!dayActionsSelectedDateStr) return;
+            const dateStr = dayActionsSelectedDateStr;
+            const data = getDateData(dateStr);
+            data.notes = e.target.value;
+            refreshDetailsPanel(); // Keep details panel synced if needed
+
+            clearTimeout(notesDebounceTimer);
+            notesDebounceTimer = setTimeout(() => {
+                const snapshot = deepClone(data);
+                apiFetch(`/api/habits/calendar/${dateStr}`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ tasks: data.tasks, notes: data.notes, timeBlocks: data.timeBlocks })
+                }).then(serverResponse => {
+                    appData.calendarData[dateStr] = { tasks: serverResponse.tasks, notes: serverResponse.notes, timeBlocks: serverResponse.timeBlocks };
+                }).catch(err => {
+                    appData.calendarData[dateStr] = snapshot;
+                    refreshDetailsPanel();
+                    console.error('Failed to save notes:', err);
+                });
+            }, 500);
         });
     }
 
@@ -824,20 +929,47 @@ document.addEventListener('DOMContentLoaded', () => {
         const input = document.getElementById('newTaskInput');
         const text = input.value;
         if (text && text.trim()) {
-            const data = getDateData(currentSelectedDateStr);
+            const dateStr = currentSelectedDateStr;
+            const data = getDateData(dateStr);
+            const snapshot = deepClone(data);
+
             data.tasks.push({ text: text.trim(), done: false });
-            saveData();
             input.value = '';
             refreshDetailsPanel();
+
+            apiFetch(`/api/habits/calendar/${dateStr}`, {
+                method: 'PUT',
+                body: JSON.stringify({ tasks: data.tasks, notes: data.notes, timeBlocks: data.timeBlocks })
+            }).then(serverResponse => {
+                appData.calendarData[dateStr] = { tasks: serverResponse.tasks, notes: serverResponse.notes, timeBlocks: serverResponse.timeBlocks };
+                refreshDetailsPanel();
+            }).catch(err => {
+                appData.calendarData[dateStr] = snapshot;
+                refreshDetailsPanel();
+                console.error('Failed to add task:', err);
+            });
         }
     });
 
     document.getElementById('saveNotesBtn').addEventListener('click', () => {
         if (currentSelectedDateStr) {
-            const data = getDateData(currentSelectedDateStr);
+            const dateStr = currentSelectedDateStr;
+            const data = getDateData(dateStr);
+            const snapshot = deepClone(data);
+
             data.notes = dailyNotes.value;
-            saveData();
             alert(`Tasks & Notes Saved for ${selectedDateTitle.textContent}!`);
+
+            apiFetch(`/api/habits/calendar/${dateStr}`, {
+                method: 'PUT',
+                body: JSON.stringify({ tasks: data.tasks, notes: data.notes, timeBlocks: data.timeBlocks })
+            }).then(serverResponse => {
+                appData.calendarData[dateStr] = { tasks: serverResponse.tasks, notes: serverResponse.notes, timeBlocks: serverResponse.timeBlocks };
+            }).catch(err => {
+                appData.calendarData[dateStr] = snapshot;
+                refreshDetailsPanel();
+                console.error('Failed to save notes:', err);
+            });
         }
     });
 
@@ -856,19 +988,28 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Initialize
-    renderCalendar(state.selectedYear, state.selectedMonth, false);
-    calendarGrid.appendChild(sentinel);
-    observer.observe(sentinel);
+    const initializeApp = async () => {
+        try {
+            const data = await apiFetch('/api/habits', { method: 'GET' });
+            appData.streaks = data.habits || [];
+            appData.calendarData = data.calendarData || {};
+        } catch (err) {
+            console.error('Failed to load habits from server:', err);
+            return;
+        }
 
-    // Auto-select today's precise local date rather than forcing the 1st
-    const initialDateStr = `${state.selectedYear}-${String(state.selectedMonth + 1).padStart(2, '0')}-${String(currentDate.getDate()).padStart(2, '0')}`;
-    selectDay(initialDateStr);
+        renderCalendar(state.selectedYear, state.selectedMonth, false);
+        calendarGrid.appendChild(sentinel);
+        observer.observe(sentinel);
+
+        // Auto-select today's precise local date rather than forcing the 1st
+        const initialDateStr = `${state.selectedYear}-${String(state.selectedMonth + 1).padStart(2, '0')}-${String(currentDate.getDate()).padStart(2, '0')}`;
+        selectDay(initialDateStr);
+    };
+
+    initializeApp();
 
     // --- STREAKS MODULE LOGIC ---
-    if (!appData.streaks) {
-        appData.streaks = [];
-        saveData();
-    }
 
     const navCalendarBtn = document.getElementById('navCalendarBtn');
     const navStreaksBtn = document.getElementById('navStreaksBtn');
@@ -960,8 +1101,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const typeEl = document.querySelector('input[name="streakType"]:checked');
         const streakType = typeEl ? typeEl.value : 'habit';
         if (name) {
-            appData.streaks.push({
-                id: Date.now().toString(),
+            const clientId = Date.now().toString();
+            const newHabit = {
+                id: clientId,
                 name: name,
                 type: streakType,
                 color: selectedStreakColor,
@@ -972,10 +1114,32 @@ document.addEventListener('DOMContentLoaded', () => {
                 longestStreak: 0,
                 lastCheckedDate: null,
                 pending: true
-            });
-            saveData();
+            };
+
+            appData.streaks.push(newHabit);
             forgeModal.style.display = 'none';
             renderStreaks();
+
+            apiFetch('/api/habits', {
+                method: 'POST',
+                body: JSON.stringify({
+                    id: clientId,
+                    name: newHabit.name,
+                    type: newHabit.type,
+                    color: newHabit.color,
+                    startDate: newHabit.startDate
+                })
+            }).then(serverResponse => {
+                const index = appData.streaks.findIndex(s => s.id === clientId);
+                if (index !== -1) {
+                    appData.streaks[index] = serverResponse.habit;
+                }
+                renderStreaks();
+            }).catch(err => {
+                appData.streaks = appData.streaks.filter(s => s.id !== clientId);
+                renderStreaks();
+                console.error('Failed to create habit:', err);
+            });
         }
     });
 
@@ -989,11 +1153,26 @@ document.addEventListener('DOMContentLoaded', () => {
     if (confirmDeleteStreakBtn) {
         confirmDeleteStreakBtn.addEventListener('click', () => {
             if (streakToDeleteId) {
-                appData.streaks = appData.streaks.filter(s => s.id !== streakToDeleteId);
-                saveData();
+                const deletedId = streakToDeleteId;
+                const habitToDelete = appData.streaks.find(s => s.id === deletedId);
+                const snapshot = habitToDelete ? deepClone(habitToDelete) : null;
+                const snapshotIndex = appData.streaks.findIndex(s => s.id === deletedId);
+
+                appData.streaks = appData.streaks.filter(s => s.id !== deletedId);
                 renderStreaks();
                 deleteStreakModal.style.display = 'none';
                 streakToDeleteId = null;
+
+                if (habitToDelete && habitToDelete._id) {
+                    apiFetch(`/api/habits/${habitToDelete._id}`, { method: 'DELETE' })
+                        .catch(err => {
+                            if (snapshot) {
+                                appData.streaks.splice(snapshotIndex, 0, snapshot);
+                                renderStreaks();
+                            }
+                            console.error('Failed to delete habit:', err);
+                        });
+                }
             }
         });
     }
@@ -1396,40 +1575,89 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const btn = card.querySelector('.clock-in-btn');
-            const updateStreakStatsOnClockIn = () => {
-                if (streak.pending !== false) {
-                    streak.currentStreak = (streak.currentStreak || 0) + 1;
-                    if (streak.currentStreak > (streak.longestStreak || 0)) {
-                        streak.longestStreak = streak.currentStreak;
-                    }
-                    streak.lastCheckedDate = formatStreakDate(new Date());
-                    streak.pending = false;
-                }
-            };
 
             if (streak.type === 'study') {
                 btn.addEventListener('click', () => {
+                    if (!streak._id) {
+                        console.warn('Habit not yet synced; please retry in a moment.');
+                        return;
+                    }
+
+                    const snapshot = deepClone(streak);
+                    const habitId = streak.id;
+
                     streak.history[todayStr] = 1;
                     streak.questionData = streak.questionData || {};
                     streak.questionData[todayStr] = (streak.questionData[todayStr] || 0) + 1;
-                    updateStreakStatsOnClockIn();
-                    saveData();
-                    renderStreaks(streak.id, false);
+                    const newQuestionDataValue = streak.questionData[todayStr];
+                    renderStreaks(habitId, false);
+
+                    apiFetch(`/api/habits/${streak._id}/checkin`, {
+                        method: 'POST',
+                        body: JSON.stringify({ date: todayStr, questionDataValue: newQuestionDataValue })
+                    }).then(serverResponse => {
+                        const index = appData.streaks.findIndex(s => s.id === habitId);
+                        if (index !== -1) appData.streaks[index] = serverResponse.habit;
+                        renderStreaks(habitId, false);
+                    }).catch(err => {
+                        const index = appData.streaks.findIndex(s => s.id === habitId);
+                        if (index !== -1) appData.streaks[index] = snapshot;
+                        renderStreaks(habitId, false);
+                        console.error('Failed to record check-in:', err);
+                    });
                 });
             } else {
                 if (!isClockedToday) {
                     btn.addEventListener('click', () => {
+                        if (!streak._id) {
+                            console.warn('Habit not yet synced; please retry in a moment.');
+                            return;
+                        }
+
+                        const snapshot = deepClone(streak);
+                        const habitId = streak.id;
+
                         streak.history[todayStr] = 1;
-                        updateStreakStatsOnClockIn();
-                        saveData();
-                        renderStreaks(streak.id, true);
+                        renderStreaks(habitId, true);
+
+                        apiFetch(`/api/habits/${streak._id}/checkin`, {
+                            method: 'POST',
+                            body: JSON.stringify({ date: todayStr })
+                        }).then(serverResponse => {
+                            const index = appData.streaks.findIndex(s => s.id === habitId);
+                            if (index !== -1) appData.streaks[index] = serverResponse.habit;
+                            renderStreaks(habitId, true);
+                        }).catch(err => {
+                            const index = appData.streaks.findIndex(s => s.id === habitId);
+                            if (index !== -1) appData.streaks[index] = snapshot;
+                            renderStreaks(habitId, true);
+                            console.error('Failed to record check-in:', err);
+                        });
                     });
                 } else {
                     btn.addEventListener('click', () => {
+                        if (!streak._id) {
+                            console.warn('Habit not yet synced; please retry in a moment.');
+                            return;
+                        }
+
+                        const snapshot = deepClone(streak);
+                        const habitId = streak.id;
+
                         streak.history[todayStr] = 0;
-                        streak.currentStreak = 0;
-                        saveData();
-                        renderStreaks(streak.id, true);
+                        renderStreaks(habitId, true);
+
+                        apiFetch(`/api/habits/${streak._id}/checkin/${todayStr}`, { method: 'DELETE' })
+                            .then(serverResponse => {
+                                const index = appData.streaks.findIndex(s => s.id === habitId);
+                                if (index !== -1) appData.streaks[index] = serverResponse.habit;
+                                renderStreaks(habitId, true);
+                            }).catch(err => {
+                                const index = appData.streaks.findIndex(s => s.id === habitId);
+                                if (index !== -1) appData.streaks[index] = snapshot;
+                                renderStreaks(habitId, true);
+                                console.error('Failed to remove check-in:', err);
+                            });
                     });
                 }
             }
