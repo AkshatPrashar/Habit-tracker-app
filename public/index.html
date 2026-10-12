@@ -9,7 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Using Material Symbols for generic icons -->
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js?v=2026-10-12"></script>
     <link rel="manifest" href="/manifest.json" />
     <link rel="icon" type="image/png" href="/images/S_fancy.png" />
     <link rel="apple-touch-icon" href="/images/S_fancy.png" />
@@ -57,6 +57,9 @@
             <div class="nav-items bottom-items">
                 <button class="nav-btn">
                     <span class="material-symbols-outlined">settings</span>
+                </button>
+                <button class="nav-btn" id="logoutBtn" title="Log out">
+                    <span class="material-symbols-outlined">logout</span>
                 </button>
             </div>
         </nav>
@@ -350,7 +353,8 @@
         </div>
     </main>
 
-    <script src="/script.js"></script>
+    <!-- Bump ?v= on every deploy to defeat the service worker's precache -->
+    <script src="/script.js?v=2"></script>
 
 
 </body>
