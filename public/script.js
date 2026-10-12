@@ -1065,6 +1065,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const messagesView = document.getElementById('messagesView');
     const messagesContainer = document.getElementById('messagesContainer');
     const logoutBtn = document.getElementById('logoutBtn');
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const mobileMenuPanel = document.getElementById('mobileMenuPanel');
+    const mobileLogoutBtn = document.getElementById('mobileLogoutBtn');
+    const logoutConfirmModal = document.getElementById('logoutConfirmModal');
+    const logoutCancelBtn = document.getElementById('logoutCancelBtn');
+    const logoutConfirmBtn = document.getElementById('logoutConfirmBtn');
 
     const forgeNewStreakBtn = document.getElementById('forgeNewStreakBtn');
     const forgeModal = document.getElementById('forgeModal');
@@ -1123,10 +1129,51 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    const openLogoutConfirm = () => {
+        if (logoutConfirmModal) logoutConfirmModal.style.display = 'flex';
+    };
+
     if (logoutBtn) {
-        logoutBtn.addEventListener('click', async () => {
+        logoutBtn.addEventListener('click', openLogoutConfirm);
+    }
+
+    if (mobileLogoutBtn) {
+        mobileLogoutBtn.addEventListener('click', () => {
+            if (mobileMenuPanel) mobileMenuPanel.style.display = 'none';
+            openLogoutConfirm();
+        });
+    }
+
+    if (logoutCancelBtn) {
+        logoutCancelBtn.addEventListener('click', () => {
+            logoutConfirmModal.style.display = 'none';
+        });
+    }
+
+    if (logoutConfirmBtn) {
+        logoutConfirmBtn.addEventListener('click', async () => {
             await Auth.logout();
             window.location.href = '/login';
+        });
+    }
+
+    if (mobileMenuBtn && mobileMenuPanel) {
+        mobileMenuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isOpen = mobileMenuPanel.style.display === 'flex';
+            mobileMenuPanel.style.display = isOpen ? 'none' : 'flex';
+        });
+
+        document.addEventListener('click', (e) => {
+            if (mobileMenuPanel.style.display !== 'flex') return;
+            if (mobileMenuPanel.contains(e.target) || mobileMenuBtn.contains(e.target)) return;
+            mobileMenuPanel.style.display = 'none';
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && mobileMenuPanel.style.display === 'flex') {
+                mobileMenuPanel.style.display = 'none';
+            }
         });
     }
 

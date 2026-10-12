@@ -96,6 +96,14 @@ body {
     color: var(--accent);
 }
 
+#mobileMenuBtn {
+    display: none;
+}
+
+#mobileMenuPanel {
+    display: none;
+}
+
 /* Calendar View */
 .calendar-view,
 .streaks-view,
@@ -1443,6 +1451,41 @@ body.chat-open .ai-bubble-btn {
 
     .nav-items.bottom-items {
         display: none;
+    }
+
+    #mobileMenuBtn {
+        display: flex;
+    }
+
+    #mobileMenuPanel {
+        position: fixed;
+        bottom: calc(60px + env(safe-area-inset-bottom));
+        right: 10px;
+        z-index: 99999;
+        background: var(--bg-panel);
+        backdrop-filter: blur(25px);
+        border: 1px solid var(--glass-border);
+        border-radius: var(--border-radius-md);
+        padding: 10px;
+        display: none;
+        flex-direction: column;
+        gap: 5px;
+        min-width: 160px;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    }
+
+    #mobileMenuPanel .nav-btn {
+        width: 100%;
+        height: auto;
+        justify-content: flex-start;
+        gap: 10px;
+        padding: 10px 12px;
+        color: var(--text-primary);
+    }
+
+    #mobileMenuPanel .nav-btn:hover {
+        background-color: rgba(212, 255, 51, 0.1);
+        color: var(--accent);
     }
 
     .nav-btn {
