@@ -7,7 +7,26 @@ const Auth = (() => {
     const getAccessToken = () => localStorage.getItem(ACCESS_TOKEN_KEY);
     const getRefreshToken = () => localStorage.getItem(REFRESH_TOKEN_KEY);
     const getEmail = () => localStorage.getItem(EMAIL_KEY);
-    const isLoggedIn = () => !!getAccessToken();
+
+    const decodeJwtPayload = (token) => {
+        try {
+            const parts = token.split('.');
+            if (parts.length !== 3) return null;
+            const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+            const padded = base64 + '='.repeat((4 - base64.length % 4) % 4);
+            return JSON.parse(atob(padded));
+        } catch (e) {
+            return null;
+        }
+    };
+
+    const isLoggedIn = () => {
+        const token = getAccessToken();
+        if (!token) return false;
+        const payload = decodeJwtPayload(token);
+        if (!payload || !payload.exp) return false;
+        return payload.exp * 1000 > Date.now();
+    };
 
     const setTokens = (accessToken, refreshToken, email) => {
         localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
@@ -85,25 +104,47 @@ const deepClone = (obj) =>
         ? structuredClone(obj)
         : JSON.parse(JSON.stringify(obj));
 
-const apiFetch = async (path, options = {}) => {
-    const token = Auth.getAccessToken();
-    const headers = {
-        'Content-Type': 'application/json',
-        ...(options.headers || {})
+const fetchWithAuth = async (path, options = {}) => {
+    const doFetch = async () => {
+        const token = Auth.getAccessToken();
+        const headers = {
+            'Content-Type': 'application/json',
+            ...(options.headers || {})
+        };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+        const res = await fetch(path, { ...options, headers });
+        const body = await res.json().catch(() => null);
+        return { res, body };
     };
-    if (token) headers['Authorization'] = `Bearer ${token}`;
 
-    const res = await fetch(path, { ...options, headers });
-    const body = await res.json().catch(() => null);
+    let { res, body } = await doFetch();
 
     if (res.status === 401) {
-        throw new Error((body && body.message) || 'Unauthorized');
+        try {
+            await Auth.refreshAccessToken();
+        } catch (refreshErr) {
+            await Auth.logout();
+            window.location.href = '/login';
+            throw new Error('Session ended');
+        }
+
+        ({ res, body } = await doFetch());
+
+        if (res.status === 401) {
+            await Auth.logout();
+            window.location.href = '/login';
+            throw new Error('Session ended');
+        }
     }
+
     if (!res.ok) {
         throw new Error((body && body.message) || `Request failed with status ${res.status}`);
     }
-    return body ? body.data : undefined;
+
+    return body && body.data !== undefined ? body.data : body;
 };
+
+const apiFetch = fetchWithAuth;
 
 // Initialize auth modal
 document.addEventListener('DOMContentLoaded', () => {
@@ -167,9 +208,7 @@ document.addEventListener('DOMContentLoaded', () => {
             authSubmitBtn.disabled = false;
         }
     });
-});
 
-document.addEventListener('DOMContentLoaded', () => {
     // --- State ---
     const currentDate = new Date();
     const currentYear = currentDate.getFullYear();
@@ -1025,6 +1064,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const navMessagesBtn = document.getElementById('navMessagesBtn');
     const messagesView = document.getElementById('messagesView');
     const messagesContainer = document.getElementById('messagesContainer');
+    const logoutBtn = document.getElementById('logoutBtn');
 
     const forgeNewStreakBtn = document.getElementById('forgeNewStreakBtn');
     const forgeModal = document.getElementById('forgeModal');
@@ -1081,6 +1121,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderMessages();
             });
         }
+    }
+
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', async () => {
+            await Auth.logout();
+            window.location.href = '/login';
+        });
     }
 
     forgeNewStreakBtn.addEventListener('click', () => {
@@ -1805,15 +1852,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!coachMessage) {
             try {
-                const res = await fetch("/api/coach", {
+                const data = await fetchWithAuth("/api/coach", {
                     method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${Auth.getToken()}`
-                    },
                     body: JSON.stringify({ streaks: appData.streaks })
                 });
-                const data = await res.json();
                 coachMessage = data.message || "Keep going — every day counts.";
                 localStorage.setItem('aiCoachCache', JSON.stringify({ date: todayStr, message: coachMessage }));
                 
@@ -2003,16 +2045,11 @@ document.addEventListener('DOMContentLoaded', () => {
         aiChatMessages.scrollTop = aiChatMessages.scrollHeight;
 
         try {
-            const res = await fetch("/api/chat", {
+            const data = await fetchWithAuth("/api/chat", {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${Auth.getToken()}`
-                },
                 body: JSON.stringify({ messages: conversationHistory, streakData: appData.streaks })
             });
-            const data = await res.json();
-            
+
             aiChatMessages.removeChild(typingIndicator);
             
             const aiNow = new Date();
