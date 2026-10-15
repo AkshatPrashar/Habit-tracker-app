@@ -96,7 +96,7 @@ body {
     color: var(--accent);
 }
 
-.mobile-app-bar {
+.mobile-peek-handle {
     display: none;
 }
 
@@ -1430,21 +1430,34 @@ body.chat-open .ai-bubble-btn {
         display: none;
     }
 
-    .mobile-app-bar {
+    .mobile-peek-handle {
         display: flex;
-        align-items: center;
+        position: fixed;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 99990;
+        width: 28px;
         height: 56px;
-        padding: 0 8px;
-        background: transparent;
-        border-bottom: 1px solid var(--glass-border);
-        margin-bottom: 8px;
-    }
-    .mobile-app-bar .nav-btn {
-        width: 44px;
-        height: 44px;
-        background: transparent;
-        border: none;
+        padding: 0;
+        background: var(--bg-panel);
+        backdrop-filter: blur(15px);
+        border: 1px solid var(--glass-border);
+        border-left: none;
+        border-radius: 0 var(--border-radius-md) var(--border-radius-md) 0;
         color: var(--text-primary);
+        cursor: pointer;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.2s ease, opacity 0.2s ease;
+    }
+    .mobile-peek-handle:hover,
+    .mobile-peek-handle:active {
+        transform: translateY(-50%) translateX(3px);
+        color: var(--accent);
+    }
+    .mobile-peek-handle .material-symbols-outlined {
+        font-size: 20px;
     }
 
     #mobileMenuBackdrop {
