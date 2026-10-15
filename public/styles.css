@@ -784,6 +784,11 @@ h3 {
     border-color: rgba(255, 255, 255, 0.2);
 }
 
+#forgeNewStreakBtn {
+    padding: 14px 26px;
+    font-size: 16px;
+}
+
 .streaks-container {
     display: flex;
     flex-direction: column;
@@ -1659,7 +1664,7 @@ body.chat-open .ai-bubble-btn {
     }
     
     .streaks-header h1 {
-        font-size: 26px;
+        font-size: 28px;
     }
 
     .streak-card {
