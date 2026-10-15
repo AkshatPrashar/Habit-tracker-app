@@ -1065,6 +1065,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const messagesView = document.getElementById('messagesView');
     const messagesContainer = document.getElementById('messagesContainer');
     const logoutBtn = document.getElementById('logoutBtn');
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const mobileMenuPanel = document.getElementById('mobileMenuPanel');
+    const mobileMenuBackdrop = document.getElementById('mobileMenuBackdrop');
+    const mobileSettingsBtn = document.getElementById('mobileSettingsBtn');
+    const mobileLogoutBtn = document.getElementById('mobileLogoutBtn');
+    const logoutConfirmModal = document.getElementById('logoutConfirmModal');
+    const logoutCancelBtn = document.getElementById('logoutCancelBtn');
+    const logoutConfirmBtn = document.getElementById('logoutConfirmBtn');
 
     const forgeNewStreakBtn = document.getElementById('forgeNewStreakBtn');
     const forgeModal = document.getElementById('forgeModal');
@@ -1123,10 +1131,61 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    const openLogoutConfirm = () => {
+        if (logoutConfirmModal) logoutConfirmModal.style.display = 'flex';
+    };
+
     if (logoutBtn) {
-        logoutBtn.addEventListener('click', async () => {
+        logoutBtn.addEventListener('click', openLogoutConfirm);
+    }
+
+    const openMobileMenu = () => {
+        mobileMenuPanel.classList.add('open');
+        mobileMenuBackdrop.classList.add('open');
+    };
+    const closeMobileMenu = () => {
+        mobileMenuPanel.classList.remove('open');
+        mobileMenuBackdrop.classList.remove('open');
+    };
+
+    if (mobileLogoutBtn) {
+        mobileLogoutBtn.addEventListener('click', () => {
+            closeMobileMenu();
+            openLogoutConfirm();
+        });
+    }
+
+    if (logoutCancelBtn) {
+        logoutCancelBtn.addEventListener('click', () => {
+            logoutConfirmModal.style.display = 'none';
+        });
+    }
+
+    if (logoutConfirmBtn) {
+        logoutConfirmBtn.addEventListener('click', async () => {
             await Auth.logout();
             window.location.href = '/login';
+        });
+    }
+
+    if (mobileMenuBtn && mobileMenuPanel) {
+        mobileMenuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (mobileMenuPanel.classList.contains('open')) {
+                closeMobileMenu();
+            } else {
+                openMobileMenu();
+            }
+        });
+
+        if (mobileMenuBackdrop) {
+            mobileMenuBackdrop.addEventListener('click', closeMobileMenu);
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && mobileMenuPanel.classList.contains('open')) {
+                closeMobileMenu();
+            }
         });
     }
 
