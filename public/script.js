@@ -1067,6 +1067,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const logoutBtn = document.getElementById('logoutBtn');
     const mobileMenuBtn = document.getElementById('mobileMenuBtn');
     const mobileMenuPanel = document.getElementById('mobileMenuPanel');
+    const mobileMenuBackdrop = document.getElementById('mobileMenuBackdrop');
+    const mobileSettingsBtn = document.getElementById('mobileSettingsBtn');
     const mobileLogoutBtn = document.getElementById('mobileLogoutBtn');
     const logoutConfirmModal = document.getElementById('logoutConfirmModal');
     const logoutCancelBtn = document.getElementById('logoutCancelBtn');
@@ -1137,9 +1139,18 @@ document.addEventListener('DOMContentLoaded', () => {
         logoutBtn.addEventListener('click', openLogoutConfirm);
     }
 
+    const openMobileMenu = () => {
+        mobileMenuPanel.classList.add('open');
+        mobileMenuBackdrop.classList.add('open');
+    };
+    const closeMobileMenu = () => {
+        mobileMenuPanel.classList.remove('open');
+        mobileMenuBackdrop.classList.remove('open');
+    };
+
     if (mobileLogoutBtn) {
         mobileLogoutBtn.addEventListener('click', () => {
-            if (mobileMenuPanel) mobileMenuPanel.style.display = 'none';
+            closeMobileMenu();
             openLogoutConfirm();
         });
     }
@@ -1160,19 +1171,20 @@ document.addEventListener('DOMContentLoaded', () => {
     if (mobileMenuBtn && mobileMenuPanel) {
         mobileMenuBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            const isOpen = mobileMenuPanel.style.display === 'flex';
-            mobileMenuPanel.style.display = isOpen ? 'none' : 'flex';
+            if (mobileMenuPanel.classList.contains('open')) {
+                closeMobileMenu();
+            } else {
+                openMobileMenu();
+            }
         });
 
-        document.addEventListener('click', (e) => {
-            if (mobileMenuPanel.style.display !== 'flex') return;
-            if (mobileMenuPanel.contains(e.target) || mobileMenuBtn.contains(e.target)) return;
-            mobileMenuPanel.style.display = 'none';
-        });
+        if (mobileMenuBackdrop) {
+            mobileMenuBackdrop.addEventListener('click', closeMobileMenu);
+        }
 
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && mobileMenuPanel.style.display === 'flex') {
-                mobileMenuPanel.style.display = 'none';
+            if (e.key === 'Escape' && mobileMenuPanel.classList.contains('open')) {
+                closeMobileMenu();
             }
         });
     }

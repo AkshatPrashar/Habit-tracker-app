@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Multi-Utility Dashboard</title>
-    <link rel="stylesheet" href="/styles.css?v=2">
+    <link rel="stylesheet" href="/styles.css?v=3">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Using Material Symbols for generic icons -->
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
@@ -62,20 +62,22 @@
                     <span class="material-symbols-outlined">logout</span>
                 </button>
             </div>
-            <button class="nav-btn" id="mobileMenuBtn" title="Menu">
-                <span class="material-symbols-outlined">menu</span>
-            </button>
-            <div id="mobileMenuPanel" style="display: none;">
-                <button class="nav-btn" id="mobileSettingsBtn">
-                    <span class="material-symbols-outlined">settings</span>
-                    <span>Settings</span>
-                </button>
-                <button class="nav-btn" id="mobileLogoutBtn">
-                    <span class="material-symbols-outlined">logout</span>
-                    <span>Log out</span>
-                </button>
-            </div>
         </nav>
+
+        <button id="mobileMenuBtn" class="nav-btn" title="Menu">
+            <span class="material-symbols-outlined">menu</span>
+        </button>
+        <div id="mobileMenuBackdrop"></div>
+        <aside id="mobileMenuPanel">
+            <button class="mobile-menu-item" id="mobileSettingsBtn">
+                <span class="material-symbols-outlined">settings</span>
+                <span>Settings</span>
+            </button>
+            <button class="mobile-menu-item" id="mobileLogoutBtn">
+                <span class="material-symbols-outlined">logout</span>
+                <span>Log out</span>
+            </button>
+        </aside>
 
         <!-- Main Calendar Grid -->
         <main class="calendar-view" id="calendarView">
@@ -379,7 +381,7 @@
     </main>
 
     <!-- Bump ?v= on every deploy to defeat the service worker's precache -->
-    <script src="/script.js?v=3"></script>
+    <script src="/script.js?v=4"></script>
 
 
 </body>
