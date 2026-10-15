@@ -146,68 +146,14 @@ const fetchWithAuth = async (path, options = {}) => {
 
 const apiFetch = fetchWithAuth;
 
-// Initialize auth modal
 document.addEventListener('DOMContentLoaded', () => {
-    const authModal = document.getElementById('authModal');
-    const authForm = document.getElementById('authForm');
-    const authEmail = document.getElementById('authEmail');
-    const authPassword = document.getElementById('authPassword');
-    const authSubmitBtn = document.getElementById('authSubmitBtn');
-    const authToggleBtn = document.getElementById('authToggleBtn');
-    const authToggleText = document.getElementById('authToggleText');
-    const authError = document.getElementById('authError');
-    const appContainer = document.querySelector('.app-container');
-
-    let isSignUp = false;
-
-    if (Auth.isLoggedIn()) {
-        authModal.classList.add('hidden');
-        appContainer.style.display = '';
-    } else {
+    if (!Auth.isLoggedIn()) {
+        localStorage.removeItem('streakies_access_token');
+        localStorage.removeItem('streakies_refresh_token');
+        localStorage.removeItem('streakies_email');
         window.location.href = '/login';
         return;
     }
-
-    authToggleBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        isSignUp = !isSignUp;
-        authSubmitBtn.textContent = isSignUp ? 'Continue with email' : 'Continue with email';
-        authToggleText.innerHTML = isSignUp
-            ? 'Already have an account? <button type="button" class="auth-link">Sign In</button>'
-            : 'Don\'t have an account? <button type="button" class="auth-link">Sign Up</button>';
-        document.querySelectorAll('.auth-link').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.preventDefault();
-                isSignUp = !isSignUp;
-                authToggleText.innerHTML = isSignUp
-                    ? 'Already have an account? <button type="button" class="auth-link">Sign In</button>'
-                    : 'Don\'t have an account? <button type="button" class="auth-link">Sign Up</button>';
-                document.querySelectorAll('.auth-link').forEach(b => b.addEventListener('click', arguments.callee));
-            });
-        });
-    });
-
-    authForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        authError.style.display = 'none';
-        authSubmitBtn.disabled = true;
-
-        try {
-            if (isSignUp) {
-                await Auth.register(authEmail.value, authPassword.value);
-            } else {
-                await Auth.login(authEmail.value, authPassword.value);
-            }
-            authModal.classList.add('hidden');
-            appContainer.style.display = '';
-            location.reload();
-        } catch (err) {
-            authError.textContent = err.message;
-            authError.style.display = 'block';
-        } finally {
-            authSubmitBtn.disabled = false;
-        }
-    });
 
     // --- State ---
     const currentDate = new Date();
