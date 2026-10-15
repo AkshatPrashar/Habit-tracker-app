@@ -96,7 +96,7 @@ body {
     color: var(--accent);
 }
 
-#mobileMenuBtn {
+.mobile-app-bar {
     display: none;
 }
 
@@ -1457,15 +1457,21 @@ body.chat-open .ai-bubble-btn {
         display: none;
     }
 
-    #mobileMenuBtn {
+    .mobile-app-bar {
         display: flex;
-        position: fixed;
-        top: 15px;
-        left: 15px;
-        z-index: 99999;
-        background: var(--bg-panel);
-        backdrop-filter: blur(15px);
-        border: 1px solid var(--glass-border);
+        align-items: center;
+        height: 56px;
+        padding: 0 8px;
+        background: transparent;
+        border-bottom: 1px solid var(--glass-border);
+        margin-bottom: 8px;
+    }
+    .mobile-app-bar .nav-btn {
+        width: 44px;
+        height: 44px;
+        background: transparent;
+        border: none;
+        color: var(--text-primary);
     }
 
     #mobileMenuBackdrop {
@@ -1527,13 +1533,6 @@ body.chat-open .ai-bubble-btn {
     }
     .mobile-menu-item .material-symbols-outlined {
         font-size: 22px;
-    }
-
-    /* Clear the floating top-left hamburger */
-    .calendar-header,
-    .streaks-header,
-    .messages-header {
-        padding-left: 60px;
     }
 
     .nav-btn {
