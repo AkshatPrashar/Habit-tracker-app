@@ -174,11 +174,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const dailyNotes = document.getElementById('dailyNotes');
 
     // New DOM Elements
-    const triggerIcon = document.getElementById('calendarNavTrigger');
-    const headerContainer = document.querySelector('.calendar-header');
-    const monthSelect = document.getElementById('monthSelect');
-    const yearSelect = document.getElementById('yearSelect');
-    const goToDateBtn = document.getElementById('goToDateBtn');
     const monthYearDisplay = document.getElementById('currentMonthYearDisplay');
     const detailsPanel = document.getElementById('detailsPanel');
     const closeSidebarBtn = document.getElementById('closeSidebarBtn');
@@ -230,23 +225,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         return appData.calendarData[dateStr];
     };
-
-    // 1. Initialization
-    months.forEach((month, index) => {
-        const option = document.createElement('option');
-        option.value = index;
-        option.textContent = month;
-        monthSelect.appendChild(option);
-    });
-    monthSelect.value = state.selectedMonth;
-
-    for (let year = 2000; year <= currentYear + 10; year++) {
-        const option = document.createElement('option');
-        option.value = year;
-        option.textContent = year;
-        yearSelect.appendChild(option);
-    }
-    yearSelect.value = state.selectedYear;
 
     // 2. Render Calendar
     const renderCalendar = (year, month, append = false) => {
@@ -858,11 +836,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    triggerIcon.addEventListener('click', (e) => {
-        e.stopPropagation();
-        headerContainer.classList.toggle('show-selectors');
-    });
-
     const sentinel = document.createElement('div');
     sentinel.id = 'scroll-sentinel';
     sentinel.style.height = '10px';
@@ -890,23 +863,6 @@ document.addEventListener('DOMContentLoaded', () => {
         root: calendarGrid,
         rootMargin: '100px',
         threshold: 0.1
-    });
-
-    goToDateBtn.addEventListener('click', () => {
-        state.selectedYear = parseInt(yearSelect.value);
-        state.selectedMonth = parseInt(monthSelect.value);
-        currentScrollYear = state.selectedYear;
-        currentScrollMonth = state.selectedMonth;
-
-        renderCalendar(state.selectedYear, state.selectedMonth, false);
-        headerContainer.classList.remove('show-selectors');
-
-        calendarGrid.appendChild(sentinel);
-        observer.observe(sentinel);
-
-        // Select day 1 automatically
-        const dateStr = `${state.selectedYear}-${String(state.selectedMonth + 1).padStart(2, '0')}-01`;
-        selectDay(dateStr);
     });
 
     addTaskBtn.addEventListener('click', () => {
