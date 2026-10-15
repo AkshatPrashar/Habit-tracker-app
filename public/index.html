@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Multi-Utility Dashboard</title>
-    <link rel="stylesheet" href="/styles.css?v=5">
+    <link rel="stylesheet" href="/styles.css?v=6">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Using Material Symbols for generic icons -->
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
@@ -64,12 +64,6 @@
                 <div style="display: flex; align-items: center; gap: 15px;">
                     <span class="material-symbols-outlined calendar-icon-trigger" id="calendarNavTrigger" style="font-size: 36px; color: var(--text-primary);">calendar_month</span>
                     <h1 id="currentMonthYearDisplay" style="margin-bottom: 0;">March 2026</h1>
-                </div>
-                <!-- Selectors -->
-                <div class="date-selectors" id="dateSelectors">
-                    <select id="monthSelect" style="padding: 5px; border-radius: 5px; border: none;"></select>
-                    <select id="yearSelect" style="padding: 5px; border-radius: 5px; border: none;"></select>
-                    <button id="goToDateBtn" style="padding: 5px 15px; border-radius: 5px; border: none; background: var(--accent); color: var(--bg-main); font-weight: bold; cursor: pointer;">Go</button>
                 </div>
             </header>
             <div class="weekdays">
@@ -360,7 +354,7 @@
     </main>
 
     <!-- Bump ?v= on every deploy to defeat the service worker's precache -->
-    <script src="/script.js?v=6"></script>
+    <script src="/script.js?v=7"></script>
 
 
 </body>
