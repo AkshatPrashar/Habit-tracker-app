@@ -129,3 +129,30 @@ export const sendLogoutNotificationEmail = async (email) => {
 
   return getTransporter().sendMail(mailOptions);
 };
+
+// Recipient is the app owner's inbox. Set CONTACT_EMAIL in the deployment
+// environment; falls back to MAILTRAP_FROM_EMAIL if unset.
+export const sendContactEmail = async (userEmail, userName, message) => {
+  const recipient = process.env.CONTACT_EMAIL || process.env.MAILTRAP_FROM_EMAIL;
+
+  const emailBody = mailgen.generate({
+    body: {
+      intro: [
+        'New message from the Streakies Contact form.',
+        `From: ${userName} (${userEmail})`,
+        message,
+      ],
+      outro: 'Reply directly to this email to respond to the user.',
+    },
+  });
+
+  const mailOptions = {
+    from: process.env.MAILTRAP_FROM_EMAIL,
+    to: recipient,
+    replyTo: userEmail,
+    subject: `[Streakies Contact] Message from ${userName}`,
+    html: emailBody,
+  };
+
+  return getTransporter().sendMail(mailOptions);
+};

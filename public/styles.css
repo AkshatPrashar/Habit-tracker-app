@@ -1960,6 +1960,29 @@ body.chat-open .ai-bubble-btn {
     max-width: 440px;
 }
 
+.contact-section {
+    padding: 44px 36px;
+    max-width: 440px;
+}
+
+.contact-section textarea {
+    width: 100%;
+    min-height: 140px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--border-radius-md);
+    padding: 12px 15px;
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 14px;
+    resize: vertical;
+}
+
+.contact-section textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
 .primary-btn {
     background: var(--accent);
     color: #090a0f;
@@ -2047,6 +2070,19 @@ body.chat-open .ai-bubble-btn {
     z-index: 1;
 }
 
+.contact-view {
+    position: relative;
+    width: 100%;
+    min-height: 100vh;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    z-index: 1;
+}
+
 .bg-canvas {
     position: fixed;
     inset: 0;
@@ -2056,6 +2092,13 @@ body.chat-open .ai-bubble-btn {
 }
 
 .change-password-view .back-btn {
+    position: fixed;
+    top: max(20px, env(safe-area-inset-top));
+    left: 20px;
+    z-index: 2;
+}
+
+.contact-view .back-btn {
     position: fixed;
     top: max(20px, env(safe-area-inset-top));
     left: 20px;
@@ -2083,6 +2126,12 @@ body.chat-open .ai-bubble-btn {
         max-width: 100%;
     }
     .change-password-view {
+        padding-bottom: 60px;
+    }
+    .contact-section {
+        padding: 20px;
+    }
+    .contact-view {
         padding-bottom: 60px;
     }
 }
