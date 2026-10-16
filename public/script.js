@@ -1018,6 +1018,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const inviteCopyLinkBtn = document.getElementById('inviteCopyLinkBtn');
     const inviteFeedback = document.getElementById('inviteFeedback');
 
+    const openChangeUsernameBtn = document.getElementById('openChangeUsernameBtn');
+    const changeUsernameView = document.getElementById('changeUsernameView');
+    const changeUsernameBackBtn = document.getElementById('changeUsernameBackBtn');
+    const changeUsernameForm = document.getElementById('changeUsernameForm');
+    const newUsernameInput = document.getElementById('newUsernameInput');
+    const currentUsernamePasswordInput = document.getElementById('currentUsernamePasswordInput');
+    const changeUsernameError = document.getElementById('changeUsernameError');
+    const changeUsernameSuccess = document.getElementById('changeUsernameSuccess');
+    const forgotCurrentPasswordFromUsernameBtn = document.getElementById('forgotCurrentPasswordFromUsernameBtn');
+
     const forgeNewStreakBtn = document.getElementById('forgeNewStreakBtn');
     const forgeModal = document.getElementById('forgeModal');
     const cancelForgeBtn = document.getElementById('cancelForgeBtn');
@@ -1042,9 +1052,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (changePasswordView) changePasswordView.style.display = 'none';
         if (contactView) contactView.style.display = 'none';
         if (inviteView) inviteView.style.display = 'none';
+        if (changeUsernameView) changeUsernameView.style.display = 'none';
         isPasswordViewVisible = false;
         isContactViewVisible = false;
         isInviteViewVisible = false;
+        isChangeUsernameViewVisible = false;
         document.body.classList.remove('settings-mode');
     };
 
@@ -1259,6 +1271,179 @@ document.addEventListener('DOMContentLoaded', () => {
             isContactViewVisible = false;
             if (contactView) contactView.style.display = 'none';
             showSettingsView();
+        });
+    }
+
+    // --- Change Username view + its own animated dot background (mirrors
+    // pwBg* exactly, duplicated rather than shared/refactored) ---
+    let isChangeUsernameViewVisible = false;
+    let unBgAnimationStarted = false;
+    let startUnBgAnimation = null;
+    const unBgCanvas = document.getElementById('unBgCanvas');
+
+    if (unBgCanvas) {
+        const unBgCtx = unBgCanvas.getContext('2d');
+        let unBgDots = [];
+
+        const unBgResize = () => {
+            unBgCanvas.width = window.innerWidth;
+            unBgCanvas.height = window.innerHeight;
+        };
+        window.addEventListener('resize', unBgResize);
+
+        const UN_BG_DOT_COLOR = '#bced1a';
+
+        const unBgMakeDot = () => ({
+            x: Math.random() * unBgCanvas.width,
+            y: Math.random() * unBgCanvas.height,
+            r: Math.random() * 1.6 + 0.6,
+            vx: (Math.random() - 0.5) * 0.3,
+            vy: (Math.random() - 0.5) * 0.3,
+            alpha: Math.random() * 0.5 + 0.3,
+        });
+
+        const unBgTick = () => {
+            if (!isChangeUsernameViewVisible) {
+                unBgAnimationStarted = false;
+                return;
+            }
+
+            unBgCtx.clearRect(0, 0, unBgCanvas.width, unBgCanvas.height);
+
+            for (const d of unBgDots) {
+                d.x += d.vx;
+                d.y += d.vy;
+
+                if (d.x < 0) d.x = unBgCanvas.width;
+                if (d.x > unBgCanvas.width) d.x = 0;
+                if (d.y < 0) d.y = unBgCanvas.height;
+                if (d.y > unBgCanvas.height) d.y = 0;
+
+                unBgCtx.beginPath();
+                unBgCtx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+                unBgCtx.fillStyle = UN_BG_DOT_COLOR;
+                unBgCtx.globalAlpha = d.alpha;
+                unBgCtx.fill();
+            }
+            unBgCtx.globalAlpha = 1;
+            requestAnimationFrame(unBgTick);
+        };
+
+        startUnBgAnimation = () => {
+            unBgResize();
+            const UN_BG_DOT_COUNT = Math.floor((window.innerWidth * window.innerHeight) / 9000);
+            unBgDots = [];
+            for (let i = 0; i < UN_BG_DOT_COUNT; i++) unBgDots.push(unBgMakeDot());
+
+            if (!unBgAnimationStarted) {
+                unBgAnimationStarted = true;
+                unBgTick();
+            }
+        };
+    }
+
+    const showChangeUsernameView = () => {
+        hideAllViews();
+        if (changeUsernameView) changeUsernameView.style.display = 'flex';
+        isChangeUsernameViewVisible = true;
+        if (startUnBgAnimation) startUnBgAnimation();
+        document.body.classList.add('settings-mode');
+    };
+
+    if (openChangeUsernameBtn) {
+        openChangeUsernameBtn.addEventListener('click', () => {
+            if (mobileMenuPanel && mobileMenuPanel.classList.contains('open')) closeMobileMenu();
+            showChangeUsernameView();
+        });
+    }
+
+    if (changeUsernameBackBtn) {
+        changeUsernameBackBtn.addEventListener('click', () => {
+            isChangeUsernameViewVisible = false;
+            if (changeUsernameView) changeUsernameView.style.display = 'none';
+            showSettingsView();
+        });
+    }
+
+    if (changeUsernameForm) {
+        changeUsernameForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (changeUsernameError) changeUsernameError.style.display = 'none';
+            if (changeUsernameSuccess) changeUsernameSuccess.style.display = 'none';
+
+            const newUsername = newUsernameInput.value.trim();
+            const currentPassword = currentUsernamePasswordInput.value;
+
+            if (!newUsername || !currentPassword) {
+                if (changeUsernameError) {
+                    changeUsernameError.textContent = 'New username and current password are required';
+                    changeUsernameError.style.display = 'block';
+                }
+                return;
+            }
+
+            if (newUsername.length < 3) {
+                if (changeUsernameError) {
+                    changeUsernameError.textContent = 'Username must be at least 3 characters';
+                    changeUsernameError.style.display = 'block';
+                }
+                return;
+            }
+
+            const submitBtn = changeUsernameForm.querySelector('button[type="submit"]');
+
+            try {
+                if (submitBtn) submitBtn.disabled = true;
+                const result = await fetchWithAuth('/api/auth/change-username', {
+                    method: 'POST',
+                    body: JSON.stringify({ newUsername, currentPassword }),
+                });
+
+                Auth.setTokens(result.accessToken, Auth.getRefreshToken(), Auth.getEmail());
+
+                if (changeUsernameSuccess) {
+                    changeUsernameSuccess.textContent = `Username updated. Your new username is ${result.username}.`;
+                    changeUsernameSuccess.style.display = 'block';
+                }
+                newUsernameInput.disabled = true;
+                currentUsernamePasswordInput.disabled = true;
+
+                setTimeout(() => {
+                    newUsernameInput.value = '';
+                    currentUsernamePasswordInput.value = '';
+                    newUsernameInput.disabled = false;
+                    currentUsernamePasswordInput.disabled = false;
+                    if (submitBtn) submitBtn.disabled = false;
+                    if (changeUsernameSuccess) changeUsernameSuccess.style.display = 'none';
+                    showSettingsView();
+                }, 1500);
+            } catch (err) {
+                if (changeUsernameError) {
+                    changeUsernameError.textContent = err.message || 'Failed to update username';
+                    changeUsernameError.style.display = 'block';
+                }
+                if (submitBtn) submitBtn.disabled = false;
+            }
+        });
+    }
+
+    if (forgotCurrentPasswordFromUsernameBtn) {
+        forgotCurrentPasswordFromUsernameBtn.addEventListener('click', async () => {
+            if (!confirm('This will send a password reset link to your email. Continue?')) return;
+
+            try {
+                await fetchWithAuth('/api/auth/forgot-password', {
+                    method: 'POST',
+                    body: JSON.stringify({ email: Auth.getEmail() }),
+                });
+                forgotCurrentPasswordFromUsernameBtn.textContent = 'Reset link sent to your email.';
+                forgotCurrentPasswordFromUsernameBtn.disabled = true;
+            } catch (err) {
+                if (changeUsernameError) {
+                    changeUsernameError.textContent = err.message || 'Failed to send reset link';
+                    changeUsernameError.style.display = 'block';
+                }
+            }
         });
     }
 

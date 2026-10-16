@@ -280,3 +280,43 @@ export const changePassword = asyncHandler(async (req, res) => {
 
   res.status(200).json(new ApiResponse(200, null, 'Password changed successfully'));
 });
+
+export const changeUsername = asyncHandler(async (req, res) => {
+  const { newUsername, currentPassword } = req.body;
+
+  if (!newUsername || !currentPassword) {
+    throw new ApiError(400, 'New username and current password are required');
+  }
+
+  const normalizedUsername = newUsername.toLowerCase().trim();
+
+  if (!/^[a-zA-Z0-9._-]+$/.test(normalizedUsername) || normalizedUsername.length < 3 || normalizedUsername.length > 20) {
+    throw new ApiError(400, 'Username must be 3-20 characters and contain only letters, numbers, dots, underscores, and dashes');
+  }
+
+  const user = await User.findById(req.user._id);
+  if (!user) {
+    throw new ApiError(404, 'User not found');
+  }
+
+  if (normalizedUsername === user.username.toLowerCase()) {
+    throw new ApiError(400, 'New username is the same as your current one');
+  }
+
+  const existingUsername = await User.findOne({ username: normalizedUsername, _id: { $ne: user._id } });
+  if (existingUsername) {
+    throw new ApiError(409, 'Username already taken');
+  }
+
+  const isCurrentPasswordValid = await user.isPasswordCorrect(currentPassword);
+  if (!isCurrentPasswordValid) {
+    throw new ApiError(401, 'Current password is incorrect');
+  }
+
+  user.username = normalizedUsername;
+  await user.save();
+
+  const newAccessToken = user.generateAccessToken();
+
+  res.status(200).json(new ApiResponse(200, { accessToken: newAccessToken, username: user.username }, 'Username updated successfully'));
+});

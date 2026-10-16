@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Multi-Utility Dashboard</title>
-    <link rel="stylesheet" href="/styles.css?v=17">
+    <link rel="stylesheet" href="/styles.css?v=18">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Using Material Symbols for generic icons -->
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
@@ -172,6 +172,11 @@
                     <span>Change Password</span>
                     <span class="material-symbols-outlined chevron">chevron_right</span>
                 </button>
+                <button class="settings-menu-item" id="openChangeUsernameBtn">
+                    <span class="material-symbols-outlined">badge</span>
+                    <span>Change Username</span>
+                    <span class="material-symbols-outlined chevron">chevron_right</span>
+                </button>
                 <button class="settings-menu-item" id="openContactBtn">
                     <span class="material-symbols-outlined">mail</span>
                     <span>Contact Streakies Team</span>
@@ -226,6 +231,29 @@
                     <p id="contactSuccess" class="form-success" style="display: none;"></p>
                     <button type="submit" class="primary-btn">Send Message</button>
                 </form>
+            </section>
+        </main>
+
+        <!-- Change Username View -->
+        <main class="change-username-view" id="changeUsernameView" style="display: none;">
+            <canvas id="unBgCanvas" class="bg-canvas"></canvas>
+            <button class="back-btn" id="changeUsernameBackBtn" aria-label="Back">
+                <span class="material-symbols-outlined">arrow_back</span>
+            </button>
+            <section class="settings-section change-username-section">
+                <p class="cp-subtitle">Change your username</p>
+                <form id="changeUsernameForm">
+                    <input type="text" id="newUsernameInput"
+                           placeholder="New username" autocomplete="username" required>
+                    <input type="password" id="currentUsernamePasswordInput"
+                           placeholder="Current password" autocomplete="current-password" required>
+                    <p id="changeUsernameError" class="form-error" style="display: none;"></p>
+                    <p id="changeUsernameSuccess" class="form-success" style="display: none;"></p>
+                    <button type="submit" class="primary-btn">Update Username</button>
+                </form>
+                <button type="button" id="forgotCurrentPasswordFromUsernameBtn" class="link-btn">
+                    Forgot current password?
+                </button>
             </section>
         </main>
 
@@ -469,7 +497,7 @@
     </main>
 
     <!-- Bump ?v= on every deploy to defeat the service worker's precache -->
-    <script src="/script.js?v=17"></script>
+    <script src="/script.js?v=18"></script>
 
 
 </body>
