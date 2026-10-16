@@ -754,7 +754,7 @@ h3 {
 .streaks-header {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: center;
     margin-bottom: 40px;
 }
 

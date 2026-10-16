@@ -1183,8 +1183,18 @@ document.addEventListener('DOMContentLoaded', () => {
                                 appData.streaks.splice(snapshotIndex, 0, snapshot);
                                 renderStreaks();
                             }
-                            console.error('Failed to delete habit:', err);
+                            const statusMatch = err && typeof err.message === 'string'
+                                ? err.message.match(/status (\d+)/)
+                                : null;
+                            const statusInfo = statusMatch ? ` (HTTP ${statusMatch[1]})` : '';
+                            console.error(`Failed to delete habit from server${statusInfo}:`, err?.message || err);
                         });
+                } else if (habitToDelete) {
+                    if (snapshot) {
+                        appData.streaks.splice(snapshotIndex, 0, snapshot);
+                        renderStreaks();
+                    }
+                    console.warn('Delete skipped: habit has no _id yet (still syncing from server). Please wait a moment and try again.');
                 }
             }
         });
