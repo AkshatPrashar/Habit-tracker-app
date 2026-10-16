@@ -998,6 +998,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const contactError = document.getElementById('contactError');
     const contactSuccess = document.getElementById('contactSuccess');
 
+    const openInviteBtn = document.getElementById('openInviteBtn');
+    const inviteView = document.getElementById('inviteView');
+    const inviteBackBtn = document.getElementById('inviteBackBtn');
+    const inviteCard = document.getElementById('inviteCard');
+    const inviteNameHeading = document.getElementById('inviteNameHeading');
+    const inviteCurrentStreak = document.getElementById('inviteCurrentStreak');
+    const inviteLongestStreak = document.getElementById('inviteLongestStreak');
+    const inviteHabitCount = document.getElementById('inviteHabitCount');
+    const inviteDots = document.getElementById('inviteDots');
+    const inviteShareBtn = document.getElementById('inviteShareBtn');
+    const inviteCopyLinkBtn = document.getElementById('inviteCopyLinkBtn');
+    const inviteFeedback = document.getElementById('inviteFeedback');
+
     const forgeNewStreakBtn = document.getElementById('forgeNewStreakBtn');
     const forgeModal = document.getElementById('forgeModal');
     const cancelForgeBtn = document.getElementById('cancelForgeBtn');
@@ -1021,8 +1034,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (settingsView) settingsView.style.display = 'none';
         if (changePasswordView) changePasswordView.style.display = 'none';
         if (contactView) contactView.style.display = 'none';
+        if (inviteView) inviteView.style.display = 'none';
         isPasswordViewVisible = false;
         isContactViewVisible = false;
+        isInviteViewVisible = false;
         document.body.classList.remove('settings-mode');
     };
 
@@ -1237,6 +1252,225 @@ document.addEventListener('DOMContentLoaded', () => {
             isContactViewVisible = false;
             if (contactView) contactView.style.display = 'none';
             showSettingsView();
+        });
+    }
+
+    // --- Invite a Friend view + its own animated dot background (mirrors
+    // contactBg* exactly, duplicated rather than shared/refactored) ---
+    let isInviteViewVisible = false;
+    let inviteBgAnimationStarted = false;
+    let startInviteBgAnimation = null;
+    let inviteCountUpRunning = false;
+    const inviteBgCanvas = document.getElementById('inviteBgCanvas');
+
+    if (inviteBgCanvas) {
+        const inviteBgCtx = inviteBgCanvas.getContext('2d');
+        let inviteBgDots = [];
+
+        const inviteBgResize = () => {
+            inviteBgCanvas.width = window.innerWidth;
+            inviteBgCanvas.height = window.innerHeight;
+        };
+        window.addEventListener('resize', inviteBgResize);
+
+        const INVITE_BG_DOT_COLOR = '#bced1a';
+
+        const inviteBgMakeDot = () => ({
+            x: Math.random() * inviteBgCanvas.width,
+            y: Math.random() * inviteBgCanvas.height,
+            r: Math.random() * 1.6 + 0.6,
+            vx: (Math.random() - 0.5) * 0.3,
+            vy: (Math.random() - 0.5) * 0.3,
+            alpha: Math.random() * 0.5 + 0.3,
+        });
+
+        const inviteBgTick = () => {
+            if (!isInviteViewVisible) {
+                inviteBgAnimationStarted = false;
+                return;
+            }
+
+            inviteBgCtx.clearRect(0, 0, inviteBgCanvas.width, inviteBgCanvas.height);
+
+            for (const d of inviteBgDots) {
+                d.x += d.vx;
+                d.y += d.vy;
+
+                if (d.x < 0) d.x = inviteBgCanvas.width;
+                if (d.x > inviteBgCanvas.width) d.x = 0;
+                if (d.y < 0) d.y = inviteBgCanvas.height;
+                if (d.y > inviteBgCanvas.height) d.y = 0;
+
+                inviteBgCtx.beginPath();
+                inviteBgCtx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+                inviteBgCtx.fillStyle = INVITE_BG_DOT_COLOR;
+                inviteBgCtx.globalAlpha = d.alpha;
+                inviteBgCtx.fill();
+            }
+            inviteBgCtx.globalAlpha = 1;
+            requestAnimationFrame(inviteBgTick);
+        };
+
+        startInviteBgAnimation = () => {
+            inviteBgResize();
+            const INVITE_BG_DOT_COUNT = Math.floor((window.innerWidth * window.innerHeight) / 9000);
+            inviteBgDots = [];
+            for (let i = 0; i < INVITE_BG_DOT_COUNT; i++) inviteBgDots.push(inviteBgMakeDot());
+
+            if (!inviteBgAnimationStarted) {
+                inviteBgAnimationStarted = true;
+                inviteBgTick();
+            }
+        };
+    }
+
+    const computeInviteStats = () => {
+        const streaks = appData.streaks || [];
+        const numHabits = streaks.length;
+        const totalCheckins = streaks.reduce((sum, s) => {
+            const history = s.history || {};
+            return sum + Object.values(history).filter((v) => v >= 1).length;
+        }, 0);
+        const longestOverall = Math.max(...streaks.map((s) => s.longestStreak || 0), 0);
+        const currentOverall = Math.max(...streaks.map((s) => s.currentStreak || 0), 0);
+        return { numHabits, totalCheckins, longestOverall, currentOverall };
+    };
+
+    const runInviteCountUp = (el, target) => {
+        if (!el) return;
+        el.innerText = '0';
+        if (!(target > 0)) {
+            el.innerText = String(target);
+            return;
+        }
+        inviteCountUpRunning = true;
+        const speed = 500;
+        const inc = target / (speed / 16);
+        let c = 0;
+        const step = () => {
+            if (!isInviteViewVisible) {
+                inviteCountUpRunning = false;
+                return;
+            }
+            c += inc;
+            if (c < target) {
+                el.innerText = String(Math.ceil(c));
+                requestAnimationFrame(step);
+            } else {
+                el.innerText = String(target);
+                inviteCountUpRunning = false;
+            }
+        };
+        step();
+    };
+
+    const renderInviteView = () => {
+        const email = (typeof Auth !== 'undefined' && Auth.getEmail && Auth.getEmail()) || '';
+        const localPart = email.split('@')[0] || 'Your';
+        const displayName = localPart.charAt(0).toUpperCase() + localPart.slice(1);
+        if (inviteNameHeading) inviteNameHeading.textContent = `${displayName}'s Journey`;
+
+        const stats = computeInviteStats();
+        if (inviteCurrentStreak) {
+            inviteCurrentStreak.setAttribute('data-target', stats.currentOverall);
+            runInviteCountUp(inviteCurrentStreak, stats.currentOverall);
+        }
+        if (inviteLongestStreak) {
+            inviteLongestStreak.setAttribute('data-target', stats.longestOverall);
+            runInviteCountUp(inviteLongestStreak, stats.longestOverall);
+        }
+        if (inviteHabitCount) {
+            inviteHabitCount.setAttribute('data-target', stats.numHabits);
+            runInviteCountUp(inviteHabitCount, stats.numHabits);
+        }
+
+        if (inviteDots) {
+            inviteDots.innerHTML = '';
+            (appData.streaks || []).forEach((s) => {
+                const dot = document.createElement('span');
+                dot.className = 'invite-dot';
+                dot.style.background = s.color || 'var(--text-muted)';
+                inviteDots.appendChild(dot);
+            });
+        }
+
+        return stats;
+    };
+
+    const buildInviteShareText = (stats) => {
+        return `I've tracked ${stats.numHabits} habit${stats.numHabits === 1 ? '' : 's'} with a ${stats.longestOverall}-day streak on Streakies — join me!`;
+    };
+
+    const showInviteFeedback = (message) => {
+        if (!inviteFeedback) return;
+        inviteFeedback.textContent = message;
+        inviteFeedback.style.display = 'block';
+        setTimeout(() => {
+            inviteFeedback.style.display = 'none';
+        }, 2500);
+    };
+
+    const showInviteView = () => {
+        hideAllViews();
+        if (inviteView) inviteView.style.display = 'flex';
+        isInviteViewVisible = true;
+        if (startInviteBgAnimation) startInviteBgAnimation();
+        document.body.classList.add('settings-mode');
+        renderInviteView();
+        if (inviteCard) {
+            inviteCard.classList.remove('invite-card-animate');
+            void inviteCard.offsetWidth;
+            inviteCard.classList.add('invite-card-animate');
+        }
+    };
+
+    if (openInviteBtn) {
+        openInviteBtn.addEventListener('click', () => {
+            if (mobileMenuPanel && mobileMenuPanel.classList.contains('open')) closeMobileMenu();
+            showInviteView();
+        });
+    }
+
+    if (inviteBackBtn) {
+        inviteBackBtn.addEventListener('click', () => {
+            isInviteViewVisible = false;
+            if (inviteView) inviteView.style.display = 'none';
+            showSettingsView();
+        });
+    }
+
+    if (inviteShareBtn) {
+        inviteShareBtn.addEventListener('click', async () => {
+            const stats = computeInviteStats();
+            const text = buildInviteShareText(stats);
+            const url = window.location.origin;
+
+            if (navigator.share) {
+                try {
+                    await navigator.share({ title: 'Streakies', text, url });
+                    return;
+                } catch (err) {
+                    if (err && err.name === 'AbortError') return;
+                }
+            }
+
+            try {
+                await navigator.clipboard.writeText(`${text} ${url}`);
+                showInviteFeedback('Copied to clipboard!');
+            } catch (err) {
+                showInviteFeedback('Could not share. Please try again.');
+            }
+        });
+    }
+
+    if (inviteCopyLinkBtn) {
+        inviteCopyLinkBtn.addEventListener('click', async () => {
+            try {
+                await navigator.clipboard.writeText(window.location.origin);
+                showInviteFeedback('Link copied!');
+            } catch (err) {
+                showInviteFeedback('Could not copy link.');
+            }
         });
     }
 

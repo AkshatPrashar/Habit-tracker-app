@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Multi-Utility Dashboard</title>
-    <link rel="stylesheet" href="/styles.css?v=16">
+    <link rel="stylesheet" href="/styles.css?v=17">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Using Material Symbols for generic icons -->
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
@@ -177,6 +177,11 @@
                     <span>Contact Streakies Team</span>
                     <span class="material-symbols-outlined chevron">chevron_right</span>
                 </button>
+                <button class="settings-menu-item" id="openInviteBtn">
+                    <span class="material-symbols-outlined">person_add</span>
+                    <span>Invite a Friend</span>
+                    <span class="material-symbols-outlined chevron">chevron_right</span>
+                </button>
             </section>
         </main>
 
@@ -221,6 +226,55 @@
                     <p id="contactSuccess" class="form-success" style="display: none;"></p>
                     <button type="submit" class="primary-btn">Send Message</button>
                 </form>
+            </section>
+        </main>
+
+        <!-- Invite a Friend View -->
+        <main class="invite-view" id="inviteView" style="display: none;">
+            <canvas id="inviteBgCanvas" class="bg-canvas"></canvas>
+            <button class="back-btn" id="inviteBackBtn" aria-label="Back">
+                <span class="material-symbols-outlined">arrow_back</span>
+            </button>
+            <section class="invite-section" id="inviteCard">
+                <div class="invite-header">
+                    <p class="invite-eyebrow">Your Streakies Journey</p>
+                    <h2 class="invite-name" id="inviteNameHeading">Journey</h2>
+                </div>
+
+                <div class="invite-stats">
+                    <div class="invite-stat streak">
+                        <span class="material-symbols-outlined">local_fire_department</span>
+                        <span class="invite-stat-value count-up" id="inviteCurrentStreak" data-target="0">0</span>
+                        <span class="invite-stat-label">Current Streak</span>
+                    </div>
+                    <div class="invite-stat longest">
+                        <span class="material-symbols-outlined">emoji_events</span>
+                        <span class="invite-stat-value count-up" id="inviteLongestStreak" data-target="0">0</span>
+                        <span class="invite-stat-label">Longest Streak</span>
+                    </div>
+                    <div class="invite-stat habits">
+                        <span class="material-symbols-outlined">grid_view</span>
+                        <span class="invite-stat-value count-up" id="inviteHabitCount" data-target="0">0</span>
+                        <span class="invite-stat-label">Habits Tracked</span>
+                    </div>
+                </div>
+
+                <div class="invite-dots" id="inviteDots"></div>
+
+                <p class="invite-tagline">Building better habits, one day at a time.</p>
+
+                <div class="invite-actions">
+                    <button type="button" class="primary-btn" id="inviteShareBtn">
+                        <span class="material-symbols-outlined">ios_share</span>
+                        Share
+                    </button>
+                    <button type="button" class="invite-secondary-btn" id="inviteCopyLinkBtn">
+                        <span class="material-symbols-outlined">link</span>
+                        Copy Link
+                    </button>
+                </div>
+
+                <p id="inviteFeedback" class="form-success" style="display: none;"></p>
             </section>
         </main>
 
@@ -415,7 +469,7 @@
     </main>
 
     <!-- Bump ?v= on every deploy to defeat the service worker's precache -->
-    <script src="/script.js?v=15"></script>
+    <script src="/script.js?v=16"></script>
 
 
 </body>
