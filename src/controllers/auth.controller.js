@@ -2,10 +2,48 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import User from '../models/User.js';
 import RefreshToken from '../models/RefreshToken.js';
+import PasswordAttempt from '../models/PasswordAttempt.js';
 import { ApiResponse } from '../utils/ApiResponse.js';
 import { ApiError } from '../utils/ApiError.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { sendVerificationEmail, sendLoginNotificationEmail, sendLogoutNotificationEmail, sendForgotPasswordEmail } from '../services/emailService.js';
+
+const MAX_PASSWORD_ATTEMPTS = 3;
+const LOCKOUT_DURATION_MS = 3 * 60 * 1000;
+
+// Shared between changePassword and changeUsername — both gate on the
+// same current-password check, so a lockout applies across either.
+const assertNotLockedOut = async (userId) => {
+  const record = await PasswordAttempt.findOne({ userId });
+  if (record && record.lockedUntil && record.lockedUntil > new Date()) {
+    const minutesLeft = Math.max(1, Math.ceil((record.lockedUntil - new Date()) / 60000));
+    throw new ApiError(429, `Too many incorrect attempts. Try again in ${minutesLeft} minute(s).`);
+  }
+};
+
+// Increments the failed-attempt count and throws the appropriate error.
+// At MAX_PASSWORD_ATTEMPTS, sets a 3-minute lock and resets the count to 0
+// so the user gets a fresh set of attempts once the lock expires.
+const recordFailedPasswordAttempt = async (userId) => {
+  const record = await PasswordAttempt.findOneAndUpdate(
+    { userId },
+    { $inc: { failedCount: 1 } },
+    { upsert: true, new: true }
+  );
+
+  if (record.failedCount >= MAX_PASSWORD_ATTEMPTS) {
+    record.failedCount = 0;
+    record.lockedUntil = new Date(Date.now() + LOCKOUT_DURATION_MS);
+    await record.save();
+    throw new ApiError(429, 'Too many incorrect attempts. Try again in 3 minutes.');
+  }
+
+  throw new ApiError(403, 'Current password is incorrect');
+};
+
+const clearPasswordAttempts = async (userId) => {
+  await PasswordAttempt.deleteOne({ userId });
+};
 
 const issueAuthTokens = async (user) => {
   const accessToken = user.generateAccessToken();
@@ -267,10 +305,14 @@ export const changePassword = asyncHandler(async (req, res) => {
     throw new ApiError(404, 'User not found');
   }
 
+  await assertNotLockedOut(user._id);
+
   const isCurrentPasswordValid = await user.isPasswordCorrect(currentPassword);
   if (!isCurrentPasswordValid) {
-    throw new ApiError(401, 'Current password is incorrect');
+    await recordFailedPasswordAttempt(user._id);
   }
+
+  await clearPasswordAttempts(user._id);
 
   await RefreshToken.deleteMany({ userId: user._id });
 
@@ -308,10 +350,14 @@ export const changeUsername = asyncHandler(async (req, res) => {
     throw new ApiError(409, 'Username already taken');
   }
 
+  await assertNotLockedOut(user._id);
+
   const isCurrentPasswordValid = await user.isPasswordCorrect(currentPassword);
   if (!isCurrentPasswordValid) {
-    throw new ApiError(401, 'Current password is incorrect');
+    await recordFailedPasswordAttempt(user._id);
   }
+
+  await clearPasswordAttempts(user._id);
 
   user.username = normalizedUsername;
   await user.save();
