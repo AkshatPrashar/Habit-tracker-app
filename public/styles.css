@@ -2084,6 +2084,19 @@ body.chat-open .ai-bubble-btn {
     z-index: 1;
 }
 
+.invite-view {
+    position: relative;
+    width: 100%;
+    min-height: 100vh;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    z-index: 1;
+}
+
 .bg-canvas {
     position: fixed;
     inset: 0;
@@ -2104,6 +2117,165 @@ body.chat-open .ai-bubble-btn {
     top: max(20px, env(safe-area-inset-top));
     left: 20px;
     z-index: 2;
+}
+
+.invite-view .back-btn {
+    position: fixed;
+    top: max(20px, env(safe-area-inset-top));
+    left: 20px;
+    z-index: 2;
+}
+
+/* Invite a Friend — celebratory share card, intentionally NOT a
+   reskinned form: wider, no dual-class with .settings-section. */
+.invite-section {
+    position: relative;
+    z-index: 1;
+    background: var(--bg-panel);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--border-radius-lg);
+    box-shadow: 0 0 40px rgba(212, 255, 51, 0.08);
+    padding: 44px 36px;
+    width: 100%;
+    max-width: 520px;
+    margin: 0 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+    text-align: center;
+}
+
+.invite-header {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.invite-eyebrow {
+    color: var(--text-muted);
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.invite-name {
+    color: var(--accent);
+    font-size: 28px;
+    font-weight: 800;
+}
+
+.invite-stats {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    width: 100%;
+    flex-wrap: wrap;
+}
+
+.invite-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    min-width: 90px;
+}
+
+.invite-stat .material-symbols-outlined {
+    font-size: 26px;
+}
+
+.invite-stat.streak .material-symbols-outlined,
+.invite-stat.streak .invite-stat-value {
+    color: var(--accent);
+}
+
+.invite-stat.longest .material-symbols-outlined,
+.invite-stat.longest .invite-stat-value {
+    color: var(--timeline-active);
+}
+
+.invite-stat.habits .material-symbols-outlined,
+.invite-stat.habits .invite-stat-value {
+    color: var(--text-primary);
+}
+
+.invite-stat-value {
+    font-size: 32px;
+    font-weight: 800;
+}
+
+.invite-stat-label {
+    color: var(--text-muted);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.invite-dots {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    max-width: 100%;
+}
+
+.invite-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.invite-tagline {
+    color: var(--text-muted);
+    font-size: 14px;
+}
+
+.invite-actions {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+    justify-content: center;
+}
+
+.invite-actions .primary-btn,
+.invite-secondary-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: center;
+    flex: 1;
+    max-width: 200px;
+}
+
+.invite-secondary-btn {
+    background: transparent;
+    border: 1px solid var(--glass-border);
+    border-radius: var(--border-radius-md);
+    color: var(--text-primary);
+    padding: 12px 20px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.invite-secondary-btn:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+@keyframes inviteCardIn {
+    0% {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.invite-card-animate {
+    animation: inviteCardIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .cp-subtitle {
@@ -2141,5 +2313,22 @@ body.chat-open .ai-bubble-btn {
     }
     body.settings-mode .ai-bubble-btn {
         display: none !important;
+    }
+    .invite-section {
+        padding: 28px 20px;
+        gap: 18px;
+    }
+    .invite-view {
+        padding-bottom: 60px;
+    }
+    .invite-stats {
+        gap: 16px;
+    }
+    .invite-actions {
+        flex-direction: column;
+    }
+    .invite-actions .primary-btn,
+    .invite-secondary-btn {
+        max-width: 100%;
     }
 }
