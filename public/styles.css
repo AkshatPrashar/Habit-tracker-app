@@ -1960,6 +1960,11 @@ body.chat-open .ai-bubble-btn {
     max-width: 440px;
 }
 
+.change-username-section {
+    padding: 44px 36px;
+    max-width: 440px;
+}
+
 .contact-section {
     padding: 44px 36px;
     max-width: 440px;
@@ -2071,6 +2076,19 @@ body.chat-open .ai-bubble-btn {
     z-index: 1;
 }
 
+.change-username-view {
+    position: relative;
+    width: 100%;
+    min-height: 100vh;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    z-index: 1;
+}
+
 .contact-view {
     position: relative;
     width: 100%;
@@ -2106,6 +2124,13 @@ body.chat-open .ai-bubble-btn {
 }
 
 .change-password-view .back-btn {
+    position: fixed;
+    top: max(20px, env(safe-area-inset-top));
+    left: 20px;
+    z-index: 2;
+}
+
+.change-username-view .back-btn {
     position: fixed;
     top: max(20px, env(safe-area-inset-top));
     left: 20px;
@@ -2330,5 +2355,11 @@ body.chat-open .ai-bubble-btn {
     .invite-actions .primary-btn,
     .invite-secondary-btn {
         max-width: 100%;
+    }
+    .change-username-section {
+        padding: 20px;
+    }
+    .change-username-view {
+        padding-bottom: 60px;
     }
 }
