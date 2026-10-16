@@ -976,6 +976,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const logoutCancelBtn = document.getElementById('logoutCancelBtn');
     const logoutConfirmBtn = document.getElementById('logoutConfirmBtn');
 
+    const navSettingsBtn = document.getElementById('navSettingsBtn');
+    const settingsView = document.getElementById('settingsView');
+    const settingsBackBtn = document.getElementById('settingsBackBtn');
+    const changePasswordForm = document.getElementById('changePasswordForm');
+    const currentPasswordInput = document.getElementById('currentPasswordInput');
+    const newPasswordInput = document.getElementById('newPasswordInput');
+    const confirmNewPasswordInput = document.getElementById('confirmNewPasswordInput');
+    const changePasswordError = document.getElementById('changePasswordError');
+    const changePasswordSuccess = document.getElementById('changePasswordSuccess');
+    const forgotCurrentPasswordBtn = document.getElementById('forgotCurrentPasswordBtn');
+
     const forgeNewStreakBtn = document.getElementById('forgeNewStreakBtn');
     const forgeModal = document.getElementById('forgeModal');
     const cancelForgeBtn = document.getElementById('cancelForgeBtn');
@@ -1033,6 +1044,30 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    const showSettingsView = () => {
+        if (navCalendarBtn) navCalendarBtn.classList.remove('active');
+        if (navStreaksBtn) navStreaksBtn.classList.remove('active');
+        if (navMessagesBtn) navMessagesBtn.classList.remove('active');
+        calendarView.style.display = 'none';
+        streaksView.style.display = 'none';
+        if (messagesView) messagesView.style.display = 'none';
+        if (dayActionsView) dayActionsView.style.display = 'none';
+        if (typeof aiChatView !== 'undefined' && aiChatView) aiChatView.style.display = 'none';
+        if (settingsView) settingsView.style.display = 'flex';
+    };
+
+    if (navSettingsBtn) {
+        navSettingsBtn.addEventListener('click', showSettingsView);
+    }
+
+    if (settingsBackBtn) {
+        settingsBackBtn.addEventListener('click', () => {
+            if (settingsView) settingsView.style.display = 'none';
+            calendarView.style.display = 'flex';
+            if (navCalendarBtn) navCalendarBtn.classList.add('active');
+        });
+    }
+
     const openLogoutConfirm = () => {
         if (logoutConfirmModal) logoutConfirmModal.style.display = 'flex';
     };
@@ -1057,6 +1092,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    if (mobileSettingsBtn) {
+        mobileSettingsBtn.addEventListener('click', () => {
+            closeMobileMenu();
+            showSettingsView();
+        });
+    }
+
     if (logoutCancelBtn) {
         logoutCancelBtn.addEventListener('click', () => {
             logoutConfirmModal.style.display = 'none';
@@ -1067,6 +1109,96 @@ document.addEventListener('DOMContentLoaded', () => {
         logoutConfirmBtn.addEventListener('click', async () => {
             await Auth.logout();
             window.location.href = '/login';
+        });
+    }
+
+    const setChangePasswordLockout = (locked) => {
+        if (currentPasswordInput) currentPasswordInput.disabled = locked;
+        if (newPasswordInput) newPasswordInput.disabled = locked;
+        if (confirmNewPasswordInput) confirmNewPasswordInput.disabled = locked;
+        if (changePasswordForm) {
+            const submitBtn = changePasswordForm.querySelector('button[type="submit"]');
+            if (submitBtn) submitBtn.disabled = locked;
+        }
+        if (forgotCurrentPasswordBtn) forgotCurrentPasswordBtn.disabled = locked;
+    };
+
+    if (changePasswordForm) {
+        changePasswordForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (changePasswordError) changePasswordError.style.display = 'none';
+            if (changePasswordSuccess) changePasswordSuccess.style.display = 'none';
+
+            const currentPassword = currentPasswordInput.value;
+            const newPassword = newPasswordInput.value;
+            const confirmNewPassword = confirmNewPasswordInput.value;
+
+            if (newPassword.length < 8) {
+                if (changePasswordError) {
+                    changePasswordError.textContent = 'New password must be at least 8 characters';
+                    changePasswordError.style.display = 'block';
+                }
+                return;
+            }
+
+            if (newPassword !== confirmNewPassword) {
+                if (changePasswordError) {
+                    changePasswordError.textContent = 'New passwords do not match';
+                    changePasswordError.style.display = 'block';
+                }
+                return;
+            }
+
+            if (newPassword === currentPassword) {
+                if (changePasswordError) {
+                    changePasswordError.textContent = 'New password must be different from current password';
+                    changePasswordError.style.display = 'block';
+                }
+                return;
+            }
+
+            try {
+                await fetchWithAuth('/api/auth/change-password', {
+                    method: 'POST',
+                    body: JSON.stringify({ currentPassword, newPassword }),
+                });
+
+                if (changePasswordSuccess) {
+                    changePasswordSuccess.textContent = 'Password changed successfully. Logging you out...';
+                    changePasswordSuccess.style.display = 'block';
+                }
+                setChangePasswordLockout(true);
+
+                setTimeout(async () => {
+                    await Auth.logout();
+                    window.location.href = '/login';
+                }, 1500);
+            } catch (err) {
+                if (changePasswordError) {
+                    changePasswordError.textContent = err.message || 'Failed to change password';
+                    changePasswordError.style.display = 'block';
+                }
+            }
+        });
+    }
+
+    if (forgotCurrentPasswordBtn) {
+        forgotCurrentPasswordBtn.addEventListener('click', async () => {
+            if (!confirm('This will send a password reset link to your email. Continue?')) return;
+
+            try {
+                await fetchWithAuth('/api/auth/forgot-password', {
+                    method: 'POST',
+                    body: JSON.stringify({ email: Auth.getEmail() }),
+                });
+                forgotCurrentPasswordBtn.textContent = 'Reset link sent to your email.';
+                forgotCurrentPasswordBtn.disabled = true;
+            } catch (err) {
+                if (changePasswordError) {
+                    changePasswordError.textContent = err.message || 'Failed to send reset link';
+                    changePasswordError.style.display = 'block';
+                }
+            }
         });
     }
 
