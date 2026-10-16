@@ -1012,27 +1012,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let selectedStreakColor = '#00E5FF';
 
+    const hideAllViews = () => {
+        if (calendarView) calendarView.style.display = 'none';
+        if (streaksView) streaksView.style.display = 'none';
+        if (messagesView) messagesView.style.display = 'none';
+        if (dayActionsView) dayActionsView.style.display = 'none';
+        if (typeof aiChatView !== 'undefined' && aiChatView) aiChatView.style.display = 'none';
+        if (settingsView) settingsView.style.display = 'none';
+        if (changePasswordView) changePasswordView.style.display = 'none';
+        if (contactView) contactView.style.display = 'none';
+        isPasswordViewVisible = false;
+        isContactViewVisible = false;
+        document.body.classList.remove('settings-mode');
+    };
+
     if (navCalendarBtn && navStreaksBtn) {
         navCalendarBtn.addEventListener('click', () => {
+            hideAllViews();
             navCalendarBtn.classList.add('active');
             navStreaksBtn.classList.remove('active');
             if (navMessagesBtn) navMessagesBtn.classList.remove('active');
             calendarView.style.display = 'flex';
-            streaksView.style.display = 'none';
-            if (messagesView) messagesView.style.display = 'none';
-            if (dayActionsView) dayActionsView.style.display = 'none';
-            if (typeof aiChatView !== 'undefined' && aiChatView) aiChatView.style.display = 'none';
         });
 
         navStreaksBtn.addEventListener('click', () => {
+            hideAllViews();
             navStreaksBtn.classList.add('active');
             navCalendarBtn.classList.remove('active');
             if (navMessagesBtn) navMessagesBtn.classList.remove('active');
-            calendarView.style.display = 'none';
             streaksView.style.display = 'flex';
-            if (messagesView) messagesView.style.display = 'none';
-            if (dayActionsView) dayActionsView.style.display = 'none';
-            if (typeof aiChatView !== 'undefined' && aiChatView) aiChatView.style.display = 'none';
             detailsPanel.classList.remove('open');
             if (panelOverlay) panelOverlay.classList.remove('show');
             renderStreaks();
@@ -1040,14 +1048,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (navMessagesBtn) {
             navMessagesBtn.addEventListener('click', () => {
+                hideAllViews();
                 navMessagesBtn.classList.add('active');
                 navCalendarBtn.classList.remove('active');
                 navStreaksBtn.classList.remove('active');
-                calendarView.style.display = 'none';
-                streaksView.style.display = 'none';
                 if (messagesView) messagesView.style.display = 'flex';
-                if (dayActionsView) dayActionsView.style.display = 'none';
-                if (typeof aiChatView !== 'undefined' && aiChatView) aiChatView.style.display = 'none';
                 detailsPanel.classList.remove('open');
                 if (panelOverlay) panelOverlay.classList.remove('show');
                 renderMessages();
@@ -1056,15 +1061,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const showSettingsView = () => {
+        hideAllViews();
         if (navCalendarBtn) navCalendarBtn.classList.remove('active');
         if (navStreaksBtn) navStreaksBtn.classList.remove('active');
         if (navMessagesBtn) navMessagesBtn.classList.remove('active');
-        calendarView.style.display = 'none';
-        streaksView.style.display = 'none';
-        if (messagesView) messagesView.style.display = 'none';
-        if (dayActionsView) dayActionsView.style.display = 'none';
-        if (typeof aiChatView !== 'undefined' && aiChatView) aiChatView.style.display = 'none';
         if (settingsView) settingsView.style.display = 'flex';
+        document.body.classList.add('settings-mode');
     };
 
     if (navSettingsBtn) {
@@ -1073,7 +1075,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (settingsBackBtn) {
         settingsBackBtn.addEventListener('click', () => {
-            if (settingsView) settingsView.style.display = 'none';
+            hideAllViews();
             calendarView.style.display = 'flex';
             if (navCalendarBtn) navCalendarBtn.classList.add('active');
         });
@@ -1216,10 +1218,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const showContactView = () => {
-        if (settingsView) settingsView.style.display = 'none';
+        hideAllViews();
         if (contactView) contactView.style.display = 'flex';
         isContactViewVisible = true;
         if (startContactBgAnimation) startContactBgAnimation();
+        document.body.classList.add('settings-mode');
     };
 
     if (openContactBtn) {
@@ -1284,10 +1287,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const showChangePasswordView = () => {
-        if (settingsView) settingsView.style.display = 'none';
+        hideAllViews();
         if (changePasswordView) changePasswordView.style.display = 'flex';
         isPasswordViewVisible = true;
         if (startPwBgAnimation) startPwBgAnimation();
+        document.body.classList.add('settings-mode');
     };
 
     if (openChangePasswordBtn) {
