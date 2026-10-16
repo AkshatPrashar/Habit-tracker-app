@@ -1,4 +1,4 @@
-const CACHE = 'streakies-v15';
+const CACHE = 'streakies-v16';
 const ASSETS = [
   '/',
   '/index.html',
@@ -23,6 +23,7 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
+  if (e.request.url.includes('/api/')) return;
   if (e.request.method !== 'GET') return;
   e.respondWith(
     caches.match(e.request).then(cached => {
