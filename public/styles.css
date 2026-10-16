@@ -2031,7 +2031,7 @@ body.chat-open .ai-bubble-btn {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    max-width: 720px;
+    max-width: 100%;
 }
 
 .settings-menu-item {
