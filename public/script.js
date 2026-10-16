@@ -20,6 +20,13 @@ const Auth = (() => {
         }
     };
 
+    const getUsername = () => {
+        const token = getAccessToken();
+        if (!token) return null;
+        const payload = decodeJwtPayload(token);
+        return (payload && payload.username) || null;
+    };
+
     const isLoggedIn = () => {
         const token = getAccessToken();
         if (!token) return false;
@@ -96,7 +103,7 @@ const Auth = (() => {
         localStorage.removeItem(EMAIL_KEY);
     };
 
-    return { getToken, getAccessToken, getRefreshToken, getEmail, isLoggedIn, login, register, logout, refreshAccessToken };
+    return { getToken, getAccessToken, getRefreshToken, getEmail, getUsername, isLoggedIn, login, register, logout, refreshAccessToken };
 })();
 
 const deepClone = (obj) =>
@@ -1365,9 +1372,11 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const renderInviteView = () => {
+        const username = (typeof Auth !== 'undefined' && Auth.getUsername && Auth.getUsername()) || '';
         const email = (typeof Auth !== 'undefined' && Auth.getEmail && Auth.getEmail()) || '';
         const localPart = email.split('@')[0] || 'Your';
-        const displayName = localPart.charAt(0).toUpperCase() + localPart.slice(1);
+        const rawName = username || localPart;
+        const displayName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
         if (inviteNameHeading) inviteNameHeading.textContent = `${displayName}'s Journey`;
 
         const stats = computeInviteStats();
