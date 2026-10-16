@@ -112,8 +112,7 @@ body {
 .calendar-view,
 .streaks-view,
 .messages-view,
-.settings-view,
-.change-password-view {
+.settings-view {
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -1418,7 +1417,6 @@ body.chat-open .ai-bubble-btn {
     .streaks-view,
     .messages-view,
     .settings-view,
-    .change-password-view,
     .day-actions-view {
         padding-bottom: 70px !important;
     }
@@ -1552,7 +1550,6 @@ body.chat-open .ai-bubble-btn {
     .messages-view,
     .messages-view,
     .settings-view,
-    .change-password-view,
     .day-actions-view {
         padding: 10px;
         padding-top: max(15px, env(safe-area-inset-top));
@@ -1802,6 +1799,15 @@ body.chat-open .ai-bubble-btn {
     .messages-header h1 {
         font-size: 26px;
     }
+
+    /* Change Password view — recenter card above bottom nav on mobile */
+    .change-password-view {
+        padding-bottom: 60px;
+    }
+
+    .change-password-section {
+        padding: 20px;
+    }
 }
 
 /* Smart Messages Layout */
@@ -2034,6 +2040,14 @@ body.chat-open .ai-bubble-btn {
 
 .change-password-view {
     position: relative;
+    width: 100%;
+    min-height: 100vh;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
     z-index: 1;
 }
 
@@ -2041,14 +2055,20 @@ body.chat-open .ai-bubble-btn {
     position: fixed;
     inset: 0;
     z-index: -1;
+    background: #000;
     pointer-events: none;
 }
 
-.change-password-header {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    margin-bottom: 30px;
-    position: relative;
-    z-index: 1;
+.change-password-view .back-btn {
+    position: fixed;
+    top: max(20px, env(safe-area-inset-top));
+    left: 20px;
+    z-index: 2;
+}
+
+.cp-subtitle {
+    color: var(--text-muted);
+    font-size: 15px;
+    text-align: center;
+    margin-bottom: 5px;
 }
