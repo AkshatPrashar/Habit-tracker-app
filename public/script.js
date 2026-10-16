@@ -990,6 +990,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const changePasswordSuccess = document.getElementById('changePasswordSuccess');
     const forgotCurrentPasswordBtn = document.getElementById('forgotCurrentPasswordBtn');
 
+    const openContactBtn = document.getElementById('openContactBtn');
+    const contactView = document.getElementById('contactView');
+    const contactBackBtn = document.getElementById('contactBackBtn');
+    const contactForm = document.getElementById('contactForm');
+    const contactMessageInput = document.getElementById('contactMessageInput');
+    const contactError = document.getElementById('contactError');
+    const contactSuccess = document.getElementById('contactSuccess');
+
     const forgeNewStreakBtn = document.getElementById('forgeNewStreakBtn');
     const forgeModal = document.getElementById('forgeModal');
     const cancelForgeBtn = document.getElementById('cancelForgeBtn');
@@ -1136,6 +1144,143 @@ document.addEventListener('DOMContentLoaded', () => {
                 pwBgTick();
             }
         };
+    }
+
+    // --- Contact view + its own animated dot background (separate from
+    // the change-password canvas — duplicated rather than shared to avoid
+    // touching the working change-password animation code) ---
+    let isContactViewVisible = false;
+    let contactBgAnimationStarted = false;
+    let startContactBgAnimation = null;
+    const contactBgCanvas = document.getElementById('contactBgCanvas');
+
+    if (contactBgCanvas) {
+        const contactBgCtx = contactBgCanvas.getContext('2d');
+        let contactBgDots = [];
+
+        const contactBgResize = () => {
+            contactBgCanvas.width = window.innerWidth;
+            contactBgCanvas.height = window.innerHeight;
+        };
+        window.addEventListener('resize', contactBgResize);
+
+        const CONTACT_BG_DOT_COLOR = '#bced1a';
+
+        const contactBgMakeDot = () => ({
+            x: Math.random() * contactBgCanvas.width,
+            y: Math.random() * contactBgCanvas.height,
+            r: Math.random() * 1.6 + 0.6,
+            vx: (Math.random() - 0.5) * 0.3,
+            vy: (Math.random() - 0.5) * 0.3,
+            alpha: Math.random() * 0.5 + 0.3,
+        });
+
+        const contactBgTick = () => {
+            if (!isContactViewVisible) {
+                contactBgAnimationStarted = false;
+                return;
+            }
+
+            contactBgCtx.clearRect(0, 0, contactBgCanvas.width, contactBgCanvas.height);
+
+            for (const d of contactBgDots) {
+                d.x += d.vx;
+                d.y += d.vy;
+
+                if (d.x < 0) d.x = contactBgCanvas.width;
+                if (d.x > contactBgCanvas.width) d.x = 0;
+                if (d.y < 0) d.y = contactBgCanvas.height;
+                if (d.y > contactBgCanvas.height) d.y = 0;
+
+                contactBgCtx.beginPath();
+                contactBgCtx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+                contactBgCtx.fillStyle = CONTACT_BG_DOT_COLOR;
+                contactBgCtx.globalAlpha = d.alpha;
+                contactBgCtx.fill();
+            }
+            contactBgCtx.globalAlpha = 1;
+            requestAnimationFrame(contactBgTick);
+        };
+
+        startContactBgAnimation = () => {
+            contactBgResize();
+            const CONTACT_BG_DOT_COUNT = Math.floor((window.innerWidth * window.innerHeight) / 9000);
+            contactBgDots = [];
+            for (let i = 0; i < CONTACT_BG_DOT_COUNT; i++) contactBgDots.push(contactBgMakeDot());
+
+            if (!contactBgAnimationStarted) {
+                contactBgAnimationStarted = true;
+                contactBgTick();
+            }
+        };
+    }
+
+    const showContactView = () => {
+        if (settingsView) settingsView.style.display = 'none';
+        if (contactView) contactView.style.display = 'flex';
+        isContactViewVisible = true;
+        if (startContactBgAnimation) startContactBgAnimation();
+    };
+
+    if (openContactBtn) {
+        openContactBtn.addEventListener('click', () => {
+            if (mobileMenuPanel && mobileMenuPanel.classList.contains('open')) closeMobileMenu();
+            showContactView();
+        });
+    }
+
+    if (contactBackBtn) {
+        contactBackBtn.addEventListener('click', () => {
+            isContactViewVisible = false;
+            if (contactView) contactView.style.display = 'none';
+            showSettingsView();
+        });
+    }
+
+    if (contactForm) {
+        contactForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (contactError) contactError.style.display = 'none';
+            if (contactSuccess) contactSuccess.style.display = 'none';
+
+            const message = contactMessageInput.value.trim();
+            if (!message) {
+                if (contactError) {
+                    contactError.textContent = 'Please write a message before sending';
+                    contactError.style.display = 'block';
+                }
+                return;
+            }
+
+            const submitBtn = contactForm.querySelector('button[type="submit"]');
+
+            try {
+                if (submitBtn) submitBtn.disabled = true;
+                await fetchWithAuth('/api/contact', {
+                    method: 'POST',
+                    body: JSON.stringify({ message }),
+                });
+
+                if (contactSuccess) {
+                    contactSuccess.textContent = "Message sent to the Streakies team. We'll get back to you soon.";
+                    contactSuccess.style.display = 'block';
+                }
+                contactMessageInput.disabled = true;
+
+                setTimeout(() => {
+                    contactMessageInput.value = '';
+                    contactMessageInput.disabled = false;
+                    if (submitBtn) submitBtn.disabled = false;
+                    if (contactSuccess) contactSuccess.style.display = 'none';
+                }, 500);
+            } catch (err) {
+                if (contactError) {
+                    contactError.textContent = err.message || 'Failed to send message';
+                    contactError.style.display = 'block';
+                }
+                if (submitBtn) submitBtn.disabled = false;
+            }
+        });
     }
 
     const showChangePasswordView = () => {

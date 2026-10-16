@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Multi-Utility Dashboard</title>
-    <link rel="stylesheet" href="/styles.css?v=13">
+    <link rel="stylesheet" href="/styles.css?v=14">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Using Material Symbols for generic icons -->
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
@@ -172,7 +172,11 @@
                     <span>Change Password</span>
                     <span class="material-symbols-outlined chevron">chevron_right</span>
                 </button>
-                <!-- Contact Streakies Team placeholder reserved for next PR; do NOT add it now. -->
+                <button class="settings-menu-item" id="openContactBtn">
+                    <span class="material-symbols-outlined">mail</span>
+                    <span>Contact Streakies Team</span>
+                    <span class="material-symbols-outlined chevron">chevron_right</span>
+                </button>
             </section>
         </main>
 
@@ -198,6 +202,25 @@
                 <button type="button" id="forgotCurrentPasswordBtn" class="link-btn">
                     Forgot current password?
                 </button>
+            </section>
+        </main>
+
+        <!-- Contact Streakies Team View -->
+        <main class="contact-view" id="contactView" style="display: none;">
+            <canvas id="contactBgCanvas" class="bg-canvas"></canvas>
+            <button class="back-btn" id="contactBackBtn" aria-label="Back">
+                <span class="material-symbols-outlined">arrow_back</span>
+            </button>
+            <section class="settings-section contact-section">
+                <p class="cp-subtitle">Contact Streakies Team</p>
+                <form id="contactForm">
+                    <textarea id="contactMessageInput"
+                              placeholder="Write your message..."
+                              maxlength="2000" required></textarea>
+                    <p id="contactError" class="form-error" style="display: none;"></p>
+                    <p id="contactSuccess" class="form-success" style="display: none;"></p>
+                    <button type="submit" class="primary-btn">Send Message</button>
+                </form>
             </section>
         </main>
 
@@ -392,7 +415,7 @@
     </main>
 
     <!-- Bump ?v= on every deploy to defeat the service worker's precache -->
-    <script src="/script.js?v=13"></script>
+    <script src="/script.js?v=14"></script>
 
 
 </body>
