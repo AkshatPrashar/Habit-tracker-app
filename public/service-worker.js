@@ -1,4 +1,4 @@
-const CACHE = 'streakies-v26';
+const CACHE = 'streakies-v27';
 const ASSETS = [
   '/',
   '/index.html',

@@ -103,7 +103,7 @@ const Auth = (() => {
         localStorage.removeItem(EMAIL_KEY);
     };
 
-    return { getToken, getAccessToken, getRefreshToken, getEmail, getUsername, isLoggedIn, login, register, logout, refreshAccessToken };
+    return { getToken, getAccessToken, getRefreshToken, getEmail, getUsername, setTokens, isLoggedIn, login, register, logout, refreshAccessToken };
 })();
 
 const deepClone = (obj) =>
