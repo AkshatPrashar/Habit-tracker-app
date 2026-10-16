@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Multi-Utility Dashboard</title>
-    <link rel="stylesheet" href="/styles.css?v=10">
+    <link rel="stylesheet" href="/styles.css?v=11">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Using Material Symbols for generic icons -->
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
@@ -166,7 +166,26 @@
                 <h2>Settings</h2>
             </header>
 
-            <section class="settings-section">
+            <section class="settings-menu">
+                <button class="settings-menu-item" id="openChangePasswordBtn">
+                    <span class="material-symbols-outlined">lock</span>
+                    <span>Change Password</span>
+                    <span class="material-symbols-outlined chevron">chevron_right</span>
+                </button>
+                <!-- Contact Streakies Team placeholder reserved for next PR; do NOT add it now. -->
+            </section>
+        </main>
+
+        <!-- Change Password View -->
+        <main class="change-password-view" id="changePasswordView" style="display: none;">
+            <canvas id="passwordBgCanvas" class="bg-canvas"></canvas>
+            <header class="change-password-header">
+                <button class="back-btn" id="changePasswordBackBtn" aria-label="Back">
+                    <span class="material-symbols-outlined">arrow_back</span>
+                </button>
+                <h2>Change Password</h2>
+            </header>
+            <section class="settings-section change-password-section">
                 <h3>Change Password</h3>
                 <form id="changePasswordForm">
                     <input type="password" id="currentPasswordInput"
@@ -376,7 +395,7 @@
     </main>
 
     <!-- Bump ?v= on every deploy to defeat the service worker's precache -->
-    <script src="/script.js?v=11"></script>
+    <script src="/script.js?v=12"></script>
 
 
 </body>

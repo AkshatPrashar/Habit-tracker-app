@@ -979,6 +979,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const navSettingsBtn = document.getElementById('navSettingsBtn');
     const settingsView = document.getElementById('settingsView');
     const settingsBackBtn = document.getElementById('settingsBackBtn');
+    const openChangePasswordBtn = document.getElementById('openChangePasswordBtn');
+    const changePasswordView = document.getElementById('changePasswordView');
+    const changePasswordBackBtn = document.getElementById('changePasswordBackBtn');
     const changePasswordForm = document.getElementById('changePasswordForm');
     const currentPasswordInput = document.getElementById('currentPasswordInput');
     const newPasswordInput = document.getElementById('newPasswordInput');
@@ -1065,6 +1068,92 @@ document.addEventListener('DOMContentLoaded', () => {
             if (settingsView) settingsView.style.display = 'none';
             calendarView.style.display = 'flex';
             if (navCalendarBtn) navCalendarBtn.classList.add('active');
+        });
+    }
+
+    // --- Change Password view + login-style animated dot background ---
+    let isPasswordViewVisible = false;
+    let pwBgAnimationStarted = false;
+    let startPwBgAnimation = null;
+    const pwBgCanvas = document.getElementById('passwordBgCanvas');
+
+    if (pwBgCanvas) {
+        const pwBgCtx = pwBgCanvas.getContext('2d');
+        let pwBgDots = [];
+
+        const pwBgResize = () => {
+            pwBgCanvas.width = window.innerWidth;
+            pwBgCanvas.height = window.innerHeight;
+        };
+        window.addEventListener('resize', pwBgResize);
+
+        const PW_BG_DOT_COLOR = '#bced1a';
+
+        const pwBgMakeDot = () => ({
+            x: Math.random() * pwBgCanvas.width,
+            y: Math.random() * pwBgCanvas.height,
+            r: Math.random() * 1.6 + 0.6,
+            vx: (Math.random() - 0.5) * 0.3,
+            vy: (Math.random() - 0.5) * 0.3,
+            alpha: Math.random() * 0.5 + 0.3,
+        });
+
+        const pwBgTick = () => {
+            if (!isPasswordViewVisible) {
+                pwBgAnimationStarted = false;
+                return;
+            }
+
+            pwBgCtx.clearRect(0, 0, pwBgCanvas.width, pwBgCanvas.height);
+
+            for (const d of pwBgDots) {
+                d.x += d.vx;
+                d.y += d.vy;
+
+                if (d.x < 0) d.x = pwBgCanvas.width;
+                if (d.x > pwBgCanvas.width) d.x = 0;
+                if (d.y < 0) d.y = pwBgCanvas.height;
+                if (d.y > pwBgCanvas.height) d.y = 0;
+
+                pwBgCtx.beginPath();
+                pwBgCtx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+                pwBgCtx.fillStyle = PW_BG_DOT_COLOR;
+                pwBgCtx.globalAlpha = d.alpha;
+                pwBgCtx.fill();
+            }
+            pwBgCtx.globalAlpha = 1;
+            requestAnimationFrame(pwBgTick);
+        };
+
+        startPwBgAnimation = () => {
+            pwBgResize();
+            const PW_BG_DOT_COUNT = Math.floor((window.innerWidth * window.innerHeight) / 9000);
+            pwBgDots = [];
+            for (let i = 0; i < PW_BG_DOT_COUNT; i++) pwBgDots.push(pwBgMakeDot());
+
+            if (!pwBgAnimationStarted) {
+                pwBgAnimationStarted = true;
+                pwBgTick();
+            }
+        };
+    }
+
+    const showChangePasswordView = () => {
+        if (settingsView) settingsView.style.display = 'none';
+        if (changePasswordView) changePasswordView.style.display = 'flex';
+        isPasswordViewVisible = true;
+        if (startPwBgAnimation) startPwBgAnimation();
+    };
+
+    if (openChangePasswordBtn) {
+        openChangePasswordBtn.addEventListener('click', showChangePasswordView);
+    }
+
+    if (changePasswordBackBtn) {
+        changePasswordBackBtn.addEventListener('click', () => {
+            isPasswordViewVisible = false;
+            if (changePasswordView) changePasswordView.style.display = 'none';
+            if (settingsView) settingsView.style.display = 'flex';
         });
     }
 

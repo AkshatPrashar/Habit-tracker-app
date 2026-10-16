@@ -112,7 +112,8 @@ body {
 .calendar-view,
 .streaks-view,
 .messages-view,
-.settings-view {
+.settings-view,
+.change-password-view {
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -1417,6 +1418,7 @@ body.chat-open .ai-bubble-btn {
     .streaks-view,
     .messages-view,
     .settings-view,
+    .change-password-view,
     .day-actions-view {
         padding-bottom: 70px !important;
     }
@@ -1550,6 +1552,7 @@ body.chat-open .ai-bubble-btn {
     .messages-view,
     .messages-view,
     .settings-view,
+    .change-password-view,
     .day-actions-view {
         padding: 10px;
         padding-top: max(15px, env(safe-area-inset-top));
@@ -1997,4 +2000,55 @@ body.chat-open .ai-bubble-btn {
 .form-success {
     color: var(--accent);
     font-size: 13px;
+}
+
+.settings-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 420px;
+}
+
+.settings-menu-item {
+    background: var(--bg-panel);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--border-radius-md);
+    padding: 16px 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    color: var(--text-primary);
+    font-size: 15px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.settings-menu-item:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+}
+
+.settings-menu-item .chevron {
+    margin-left: auto;
+    color: var(--text-muted);
+}
+
+.change-password-view {
+    position: relative;
+    z-index: 1;
+}
+
+.bg-canvas {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+}
+
+.change-password-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 30px;
+    position: relative;
+    z-index: 1;
 }
