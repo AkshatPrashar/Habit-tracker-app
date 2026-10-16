@@ -249,3 +249,34 @@ export const getMe = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id).select('-password -refreshToken -forgotPasswordToken -emailVerificationToken');
   res.status(200).json(new ApiResponse(200, { user }, 'User fetched successfully'));
 });
+
+export const changePassword = asyncHandler(async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+
+  if (!currentPassword || !newPassword) {
+    throw new ApiError(400, 'Current password and new password are required');
+  }
+
+  // minimum length — new rule, not present in register
+  if (newPassword.length < 8) {
+    throw new ApiError(400, 'New password must be at least 8 characters');
+  }
+
+  const user = await User.findById(req.user._id);
+  if (!user) {
+    throw new ApiError(404, 'User not found');
+  }
+
+  const isCurrentPasswordValid = await user.isPasswordCorrect(currentPassword);
+  if (!isCurrentPasswordValid) {
+    throw new ApiError(401, 'Current password is incorrect');
+  }
+
+  await RefreshToken.deleteMany({ userId: user._id });
+
+  user.password = newPassword;
+  user.refreshToken = null;
+  await user.save();
+
+  res.status(200).json(new ApiResponse(200, null, 'Password changed successfully'));
+});
