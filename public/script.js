@@ -153,13 +153,22 @@ const fetchWithAuth = async (path, options = {}) => {
 
 const apiFetch = fetchWithAuth;
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     if (!Auth.isLoggedIn()) {
-        localStorage.removeItem('streakies_access_token');
-        localStorage.removeItem('streakies_refresh_token');
-        localStorage.removeItem('streakies_email');
-        window.location.href = '/login';
-        return;
+        if (Auth.getRefreshToken()) {
+            try {
+                await Auth.refreshAccessToken();
+            } catch (err) {
+                console.warn('Silent refresh failed, redirecting to login', err);
+                await Auth.logout();
+                window.location.href = '/login';
+                return;
+            }
+        } else {
+            await Auth.logout();
+            window.location.href = '/login';
+            return;
+        }
     }
 
     // --- State ---
